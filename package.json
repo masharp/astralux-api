@@ -1,0 +1,69 @@
+{
+  "name": "astralux",
+  "version": "0.0.1",
+  "private": true,
+  "homepage": "http://astralux.herokuapp.com",
+  "bugs": {
+    "url": "https://github.com/masharp/astralux/issues"
+  },
+  "author": "Michael Sharp (http://www.softwareontheshore.com)",
+  "license": "MIT",
+  "scripts": {
+    "lint-app": "eslint -c package.json app.js ./routes/index.js",
+    "lint-scraper": "eslint -c package.json ./bin/scrape ./scripts/scrape/job.js ./scripts/scrape/housing.js",
+    "lint-database": "eslint -c package.json ./bin/migrate ./db",
+    "lint-scripts": "eslint -c package.json ./scripts/town.js ./scripts/home.js ./scripts/menu.js ./scripts/about.js ./scripts/components",
+    "bundle-all": "npm run bundle-home && npm run bundle-town && npm run bundle-menu && npm run bundle-about",
+    "bundle-home": "browserify ./scripts/home.js -t babelify --outfile ./public/javascripts/home/bundle-home.js && minify ./public/javascripts/home/bundle-home.js",
+    "bundle-town": "browserify ./scripts/town.js -t babelify --outfile ./public/javascripts/town/bundle-town.js && minify ./public/javascripts/town/bundle-town.js",
+    "bundle-menu": "browserify ./scripts/menu.js -t babelify --outfile ./public/javascripts/menu/bundle-menu.js && minify ./public/javascripts/menu/bundle-menu.js",
+    "bundle-about": "browserify ./scripts/about.js -t babelify --outfile ./public/javascripts/about/bundle-about.js && minify ./public/javascripts/about/bundle-about.js",
+    "start": "node ./bin/www",
+    "test": "jasmine JASMINE_CONFIG_PATH=test/jasmine.json",
+    "sass-global": "sass --watch ./public/stylesheets/global/global.scss:./public/stylesheets/global/global.css --style compressed"
+  },
+  "engines": {
+    "node": "~6.0.0",
+    "npm": "~3.5.3"
+  },
+  "eslintConfig": {
+    "extends": "airbnb",
+    "parserOptions": {
+      "ecmaVersion": 6,
+      "sourceType": "module"
+    },
+    "rules": {
+      "strict": "off"
+    }
+  },
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "browserify": "^13.0.0",
+    "compression": "^1.6.1",
+    "cookie-parser": "^1.4.1",
+    "debug": "^2.2.0",
+    "dotenv": "^2.0.0",
+    "express": "^4.13.4",
+    "morgan": "^1.7.0",
+    "pug": "^2.0.0-alpha7",
+    "react": "^0.14.7",
+    "react-dom": "^0.14.7",
+    "request": "^2.69.0",
+    "serve-favicon": "^2.3.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.6.5",
+    "babel-preset-es2015": "^6.6.0",
+    "babelify": "^7.2.0",
+    "eslint": "^2.4.0",
+    "eslint-config-airbnb": "^6.2.0",
+    "eslint-plugin-react": "^4.2.3",
+    "expect": "^1.16.0",
+    "frisby": "^0.8.5",
+    "jasmine": "^2.4.1",
+    "jasmine-core": "^2.4.1",
+    "karma": "^0.13.22",
+    "karma-jasmine": "^0.3.8",
+    "karma-phantomjs-launcher": "^1.0.0"
+  }
+}
