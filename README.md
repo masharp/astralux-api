@@ -6,6 +6,5 @@ Contact: michael@softwareontheshore.com
 Follow Me: [@sharp_mi]('https://www.twitter.com/sharp_mi')
 
 Technologies:
-  * Heroku
-  * Node
-  * Express
+  * Python2
+  * Flask
