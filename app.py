@@ -2,12 +2,17 @@
 ## http://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
 ## https://realpython.com/blog/python/flask-by-example-part-2-postgres-sqlalchemy-and-alembic/
 
+import os
 from flask import Flask
 from flask import jsonify, make_response, request, abort, url_for
 from flask.ext.httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
+app.config.from_object(os.environ['APP_SETTINGS'])
 auth = HTTPBasicAuth()
+
+## Check Environment Setttings
+print(os.environ['APP_SETTINGS'])
 
 ################ Basic HTTP AUTH ##########################
 ## NOTE: Obfuscate username and password in production
@@ -96,4 +101,4 @@ def unauthorized():
     return make_response(jsonify({ 'error': 'Unauthorized Access'}), 403)
 
 if __name__ == '__main__':
-    app.run(debug = True)
+    app.run()
