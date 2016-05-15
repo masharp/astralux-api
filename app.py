@@ -1,5 +1,6 @@
 #!flask/bin/python
-#http://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
+## http://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
+## https://realpython.com/blog/python/flask-by-example-part-2-postgres-sqlalchemy-and-alembic/
 
 from flask import Flask
 from flask import jsonify, make_response, request, abort, url_for
