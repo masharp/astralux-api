@@ -8,11 +8,8 @@ from flask import jsonify, make_response, request, abort, url_for
 from flask.ext.httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
-app.config.from_object(os.environ['APP_SETTINGS'])
+app.config.from_object(os.environ['APP_SETTINGS']) ## load environment settings
 auth = HTTPBasicAuth()
-
-## Check Environment Setttings
-print(os.environ['APP_SETTINGS'])
 
 ################ Basic HTTP AUTH ##########################
 ## NOTE: Obfuscate username and password in production
