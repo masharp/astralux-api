@@ -3,23 +3,32 @@
 ## https://realpython.com/blog/python/flask-by-example-part-2-postgres-sqlalchemy-and-alembic/
 
 import os
+
 from flask import Flask
 from flask import jsonify, make_response, request, abort, url_for
 from flask.ext.httpauth import HTTPBasicAuth
+from flask.ext.sqlalchemy import SQLAlchemy
+
+### Database Models ###
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS']) ## load environment settings
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 auth = HTTPBasicAuth()
+database = SQLAlchemy(app)
 
-################ Basic HTTP AUTH ##########################
+### PostgreSQL Database ###
+from models import Moonlet
+
+### Basic HTTP AUTH ###
 ## NOTE: Obfuscate username and password in production
 @auth.get_password
 def get_password(username):
-    if username == 'abcdefg':
-        return 'xyz'
+    if username == 'master':
+        return app.config['MASTER_PASSWORD']
     return None
 
-################ Public URI ################################
+### Public URI ###
 ## NOTE: Exposes the public URI for each item in place of the product id
 ## NOTE: used in conjuncture with - return jsonify({'moonlets': [make_public_moonlet(moonlet) for moonlet in moonlets]})
 def make_public_moonlet(moonlet):
@@ -32,7 +41,7 @@ def make_public_moonlet(moonlet):
             new_moonlet[field] == moonlet[field]
     return new_moonlet
 
-#################### HTTP GET ROUTES #################
+### HTTP GET ROUTES ###
 @app.route('/api/v1.0/moonlets', methods=['GET'])
 @auth.login_required
 def get_moonlets():
@@ -53,14 +62,14 @@ def get_sales():
 def get_limited():
     return jsonify({ 'limited': 123123 })
 
-#################### HTTP PUT ROUTES ######################
+### HTTP PUT ROUTES ###
 # TODO: Add exhaustive bug checking with aborts
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['PUT'])
 @auth.login_required
 def update_moonlet(moonlet_id):
     return jsonify({ 'update': moonlet_id })
 
-#################### HTTP POST ROUTES ######################
+### HTTP POST ROUTES ###
 @app.route('/api/v1.0/moonlets', methods=['POST'])
 @auth.login_required
 def create_moonlet():
@@ -78,13 +87,13 @@ def create_moonlet():
     }
     return jsonify({ 'moonlet': moonlet }), 201
 
-#################### HTTP DELETE ROUTES ######################
+#### HTTP DELETE ROUTES ###
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['DELETE'])
 @auth.login_required
 def delete_moonlet():
     return jsonify({ 'delete': moonlet_id })
 
-################## ERROR HANDLERS ###########################
+### ERROR HANDLERS ###
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({ 'error': 'Not Found'}), 404)
