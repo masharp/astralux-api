@@ -1,21 +1,20 @@
-from app import database
-from sqlalchemy.dialects.postgresql import JSON
+from app import db
 
-class Moonlets(database.Model):
+class Moonlet(db.Model):
     __tablename__ = 'moonlets'
 
-    id = database.Column(database.Integer, primary_key = True) # id key
-    updated = database.Column(database.DateTime) # date of last update
-    display_name = database.Column(database.String(), unique = True) # name of moonlet
-    description = database.Column(database.String()) # description of moonlet
-    classification = database.Column(database.String()) # type of moonlet
-    color = database.Column(database.String()) # color of moonlet
-    inventory = database.Column(database.Integer) # amount in inventory
-    price = database.Column(database.Integer) # current price of moonlet
-    discount = database.Column(database.Integer) # discount integer if on sale (whole number representing a percentage)
-    on_sale = database.Column(database.Boolean) # if the moonlet is on sale
-    limited = database.Column(database.Boolean) # if there is limited quantity (selling out or rare)
-    img_src = database.Column(database.String()) # local server url for the display image
+    id = db.Column(db.Integer, primary_key = True) # id key
+    updated = db.Column(db.DateTime) # date of last update
+    display_name = db.Column(db.String(), unique = True) # name of moonlet
+    description = db.Column(db.String()) # description of moonlet
+    classification = db.Column(db.String()) # type of moonlet
+    color = db.Column(db.String()) # color of moonlet
+    inventory = db.Column(db.Integer) # amount in inventory
+    price = db.Column(db.Integer) # current price of moonlet
+    discount = db.Column(db.Integer) # discount integer if on sale (whole number representing a percentage)
+    on_sale = db.Column(db.Boolean) # if the moonlet is on sale
+    limited = db.Column(db.Boolean) # if there is limited quantity (selling out or rare)
+    img_src = db.Column(db.String()) # local server url for the display image
 
     ## method runs the first time a moonlet is created
     def __init__(self, updated, name, desc, classif, color, inv, price, disc, sale, ltd, src):

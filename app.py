@@ -15,10 +15,10 @@ app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS']) ## load environment settings
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 auth = HTTPBasicAuth()
-database = SQLAlchemy(app)
+db = SQLAlchemy(app)
 
 ### PostgreSQL Database ###
-from models import Moonlet
+
 
 ### Basic HTTP AUTH ###
 ## NOTE: Obfuscate username and password in production
@@ -108,3 +108,6 @@ def unauthorized():
 
 if __name__ == '__main__':
     app.run()
+
+
+from models import Moonlet
