@@ -1,10 +1,10 @@
 from app import db
+from random import randint
 
 class Moonlet(db.Model):
     __tablename__ = 'moonlets'
 
     id = db.Column(db.Integer, primary_key = True) # id key
-    updated = db.Column(db.DateTime) # date of last update
     display_name = db.Column(db.String(), unique = True) # name of moonlet
     description = db.Column(db.String()) # description of moonlet
     classification = db.Column(db.String()) # type of moonlet
@@ -17,8 +17,8 @@ class Moonlet(db.Model):
     img_src = db.Column(db.String()) # local server url for the display image
 
     ## method runs the first time a moonlet is created
-    def __init__(self, updated, name, desc, classif, color, inv, price, disc, sale, ltd, src):
-        self.updated = updated
+    def __init__(self, name, desc, classif, color, inv, price, disc, sale, ltd, src):
+        self.id = randint(100000, 999999)
         self.display_name = name
         self.description = desc
         self.classification = classif
@@ -32,4 +32,21 @@ class Moonlet(db.Model):
 
     ## method represents the object when queried
     def __repr__(self):
-        return '<id {}'.format(self.id)
+        return '<id {}>'.format(self.id)
+
+    ## extra property to serialize for JSON transmission
+    ## converts it's sql property to a JSON property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'display_name': self.display_name,
+            'description': self.description,
+            'classification': self.classification,
+            'color': self.color,
+            'inventory': self.inventory,
+            'price': self.price,
+            'discount': self.discount,
+            'on_sale': self.on_sale,
+            'limited': self.limited,
+            'img_src': self.img_src
+        }

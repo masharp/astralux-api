@@ -1,6 +1,7 @@
 #!flask/bin/python
 ## http://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
 ## https://realpython.com/blog/python/flask-by-example-part-2-postgres-sqlalchemy-and-alembic/
+## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" - POST -d '{"name":"Astralux-FA199"}' http://localhost:5000/api/v1.0/moonlets
 
 import os
 
@@ -17,11 +18,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 auth = HTTPBasicAuth()
 db = SQLAlchemy(app)
 
-### PostgreSQL Database ###
-
-
 ### Basic HTTP AUTH ###
-## NOTE: Obfuscate username and password in production
 @auth.get_password
 def get_password(username):
     if username == 'master':
@@ -45,7 +42,16 @@ def make_public_moonlet(moonlet):
 @app.route('/api/v1.0/moonlets', methods=['GET'])
 @auth.login_required
 def get_moonlets():
-    return jsonify({ 'moonlets': 13123123 })
+    from models import Moonlet
+
+    try:
+        results = Moonlet.query.all() # query database via sqlalchemy
+        results = [ item.serialize() for item in results ] # use class method to serialize each item
+        return jsonify({ 'moonlets': results }), 201 # return as json
+
+    except Exception as error:
+        print error
+        return make_response(jsonify({ 'error': 'Unable to retrieve moonlets from database!' }), 500)
 
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['GET'])
 @auth.login_required
@@ -73,19 +79,31 @@ def update_moonlet(moonlet_id):
 @app.route('/api/v1.0/moonlets', methods=['POST'])
 @auth.login_required
 def create_moonlet():
+    from models import Moonlet
+
     if not request.json or not 'name' in request.json:
         abort(400)
 
-    moonlet = {
-        'id': 1231232131,
-        'name': request.json['name'],
-        'description': request.json.get('description', "A new Moonlet!"),
-        'price': request.json.get('price', 0.0),
-        'inventory': request.json.get('inventory', 10),
-        'sale': False,
-        'sale_price': 0.0
-    }
-    return jsonify({ 'moonlet': moonlet }), 201
+    try:
+        moonlet = Moonlet( # create a new table item out of the posted json or defaults
+            name = request.json['name'],
+            desc = request.json.get('description', "A newly discovered moonlet!"),
+            classif = request.json.get('classification', 'AA-Zeus'),
+            color = request.json.get('color', 'Grey'),
+            inv = request.json.get('inventory', 100),
+            price = request.json.get('price', 1000),
+            disc = request.json.get('discount', 10),
+            sale = request.json.get('sale', False),
+            ltd = request.json.get('limited', False),
+            src = request.json.get('src', '/assets/moonlets/generic.jpg')
+        )
+        db.session.add(moonlet)
+        db.session.commit()
+        return jsonify({ 'message': 'New moonlet saved to database!' }), 201
+
+    except Exception as error:
+        print error
+        return make_response(jsonify({ 'error': 'Unable to add moonlet to database!'}), 500)
 
 #### HTTP DELETE ROUTES ###
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['DELETE'])
@@ -108,6 +126,3 @@ def unauthorized():
 
 if __name__ == '__main__':
     app.run()
-
-
-from models import Moonlet
