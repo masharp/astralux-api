@@ -1,5 +1,6 @@
 from app import db
 from random import randint
+from sqlalchemy.dialects.postgresql import JSON
 
 class Moonlet(db.Model):
     __tablename__ = 'moonlets'
@@ -49,4 +50,39 @@ class Moonlet(db.Model):
             'on_sale': self.on_sale,
             'limited': self.limited,
             'img_src': self.img_src
+        }
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    username = db.Column(db.String(), primary_key = True, unique = True) # user name
+    email = db.Column(db.String(), unique = True) # email of user
+    platform = db.Column(db.String()) # external OAuth platform (Facebook, etc.)
+    display_name = db.Column(db.String()) # name of user
+    balance = db.Column(db.Integer) # account coin balance
+    moonlets = db.Column(JSON) # moonlet inventory
+
+    ## method runs the first time a moonlet is created
+    def __init__(self, usr, email, platform, name, balance, moonlets):
+        self.username = usr
+        self.email = email
+        self.platform = platform
+        self.display_name = name
+        self.balance = balance
+        self.moonlets = moonlets
+
+    ## method represents the object when queried
+    def __repr__(self):
+        return '<user {}>'.format(self.username)
+
+    ## extra property to serialize for JSON transmission
+    ## converts it's sql property to a JSON property
+    def serialize(self):
+        return {
+            'username': self.username,
+            'display_name': self.display_name,
+            'email': self.email,
+            'platform': self.platform,
+            'balance': self.balance,
+            'moonlets': self.moonlets
         }

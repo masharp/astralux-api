@@ -14,7 +14,7 @@ Technologies:
 PostgreSQL Models:
   * Moonlet:
     * id: int, primary key
-    * name: string
+    * name: string, unique
     * description: string
     * type: string
     * inventory: int
@@ -22,3 +22,10 @@ PostgreSQL Models:
     * limited: boolean
     * discount: float
     * img_src: string
+  * User:
+    * username: string, primary key, unique
+    * email: string, unique
+    * display_name: string
+    * platform: string
+    * balance: int
+    * moonlets: json{string<moonlet_id>: int<amount>}
