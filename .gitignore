@@ -15,9 +15,11 @@ node_modules
 *.env
 .env
 
+*.pyc
+.pyc
+
 # Virtualenv
 .Python
 bin
 lib
 include
-*.pyc
