@@ -49,6 +49,8 @@ def make_public_user(user):
 @auth.login_required
 @cross_origin()
 def get_moonlets():
+    from models import Moonlet
+
     try:
         results = Moonlet.query.all() # query database via sqlalchemy
         results = [ item.serialize() for item in results ] # use class method to serialize each item
@@ -63,6 +65,8 @@ def get_moonlets():
 @auth.login_required
 @cross_origin()
 def get_moonlet(moonlet_id):
+    from models import Moonlet
+
     try:
         result = Moonlet.query.filter_by(id = moonlet_id).first() # query for moonlet
 
@@ -81,6 +85,7 @@ def get_moonlet(moonlet_id):
 @auth.login_required
 @cross_origin()
 def get_sales():
+    from models import Moonlet
     try:
         results = Moonlet.query.filter(Moonlet.on_sale == True).all()
 
@@ -99,6 +104,8 @@ def get_sales():
 @auth.login_required
 @cross_origin()
 def get_limited():
+    from models import Moonlet
+
     try:
         results = Moonlet.query.filter(Moonlet.limited == True).all()
 
@@ -117,6 +124,8 @@ def get_limited():
 @auth.login_required
 @cross_origin()
 def get_users():
+    from models import User
+    
     try:
         results = User.query.all() # query database via sqlalchemy
         results = [ item.serialize() for item in results ] # use class method to serialize each item
@@ -131,6 +140,8 @@ def get_users():
 @auth.login_required
 @cross_origin()
 def get_user(username):
+    from models import User
+
     try:
         result = User.query.filter_by(username = username).first()
 
@@ -163,6 +174,8 @@ def update_user(username):
 @auth.login_required
 @cross_origin()
 def create_moonlet():
+    from models import Moonlet
+
     if not request.json or not 'name' in request.json:
         abort(400)
 
@@ -191,6 +204,8 @@ def create_moonlet():
 @auth.login_required
 @cross_origin()
 def create_user():
+    from models import User
+
     if not request.json or not 'username' in request.json or not 'email' in request.json:
         abort(400)
 
@@ -238,5 +253,4 @@ def unauthorized():
     return make_response(jsonify({ 'error': 'Unauthorized Access'}), 403)
 
 if __name__ == '__main__':
-    from models import Moonlet, User
     app.run()
