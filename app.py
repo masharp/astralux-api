@@ -14,7 +14,7 @@ from flask.ext.cors import CORS, cross_origin
 ### Database Models ###
 
 app = Flask(__name__)
-cors = CORS(app)
+cors = CORS(app, resources = r'/api/*', allow_headers='Content-Type', supports_credentials = True)
 app.config.from_object(os.environ['APP_SETTINGS']) ## load environment settings
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -47,7 +47,6 @@ def make_public_user(user):
 ### HTTP GET ROUTES ###
 @app.route('/api/v1.0/moonlets', methods=['GET'])
 @auth.login_required
-@cross_origin()
 def get_moonlets():
     from models import Moonlet
 
@@ -63,7 +62,6 @@ def get_moonlets():
 
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['GET'])
 @auth.login_required
-@cross_origin()
 def get_moonlet(moonlet_id):
     from models import Moonlet
 
@@ -83,7 +81,6 @@ def get_moonlet(moonlet_id):
 
 @app.route('/api/v1.0/moonlets/sale', methods=['GET'])
 @auth.login_required
-@cross_origin()
 def get_sales():
     from models import Moonlet
     try:
@@ -102,7 +99,6 @@ def get_sales():
 
 @app.route('/api/v1.0/moonlets/limited', methods=['GET'])
 @auth.login_required
-@cross_origin()
 def get_limited():
     from models import Moonlet
 
@@ -122,10 +118,9 @@ def get_limited():
 
 @app.route('/api/v1.0/users', methods=['GET'])
 @auth.login_required
-@cross_origin()
 def get_users():
     from models import User
-    
+
     try:
         results = User.query.all() # query database via sqlalchemy
         results = [ item.serialize() for item in results ] # use class method to serialize each item
@@ -138,7 +133,6 @@ def get_users():
 
 @app.route('/api/v1.0/users/<string:username>', methods=['GET'])
 @auth.login_required
-@cross_origin()
 def get_user(username):
     from models import User
 
@@ -159,20 +153,17 @@ def get_user(username):
 # TODO: Add exhaustive bug checking with aborts
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['PUT'])
 @auth.login_required
-@cross_origin()
 def update_moonlet(moonlet_id):
     return jsonify({ 'update': moonlet_id })
 
 @app.route('/api/v1.0/users/<string:username>', methods=['PUT'])
 @auth.login_required
-@cross_origin()
 def update_user(username):
     return jsonify({ 'update': username })
 
 ### HTTP POST ROUTES ###
 @app.route('/api/v1.0/moonlets', methods=['POST'])
 @auth.login_required
-@cross_origin()
 def create_moonlet():
     from models import Moonlet
 
@@ -202,7 +193,6 @@ def create_moonlet():
 
 @app.route('/api/v1.0/users', methods=['POST'])
 @auth.login_required
-@cross_origin()
 def create_user():
     from models import User
 
@@ -229,13 +219,11 @@ def create_user():
 #### HTTP DELETE ROUTES ###
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['DELETE'])
 @auth.login_required
-@cross_origin()
 def delete_moonlet():
     return jsonify({ 'delete': moonlet_id })
 
 @app.route('/api/v1.0/users/<string:username>', methods=['DELETE'])
 @auth.login_required
-@cross_origin()
 def delete_user(username):
     return jsonify({ 'delete': username })
 
