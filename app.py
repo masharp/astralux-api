@@ -9,12 +9,12 @@ from flask import Flask
 from flask import jsonify, make_response, request, abort, url_for
 from flask.ext.httpauth import HTTPBasicAuth
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.cors import CORS, cross_origin
+from flask.ext.cors import CORS
 
 ### Database Models ###
 
 app = Flask(__name__)
-cors = CORS(app, resources = r'/api/*', allow_headers='Content-Type', supports_credentials = True)
+cors = CORS(app, resources = r'/api/*', supports_credentials = True)
 app.config.from_object(os.environ['APP_SETTINGS']) ## load environment settings
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['CORS_HEADERS'] = 'Content-Type'
