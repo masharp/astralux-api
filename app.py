@@ -11,14 +11,12 @@ from flask.ext.httpauth import HTTPBasicAuth
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.cors import CORS
 
-### Database Models ###
-
 app = Flask(__name__)
-cors = CORS(app, resources = r'/api/*', supports_credentials = True)
 app.config.from_object(os.environ['APP_SETTINGS']) ## load environment settings
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['CORS_HEADERS'] = 'Content-Type'
 auth = HTTPBasicAuth()
+cors = CORS(app, resources = { r'/api/*': { 'origins': '*' }}, supports_credentials = True)
 db = SQLAlchemy(app)
 
 ### Basic HTTP AUTH ###
