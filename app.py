@@ -3,6 +3,9 @@
 ## https://realpython.com/blog/python/flask-by-example-part-2-postgres-sqlalchemy-and-alembic/
 ## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" - POST -d '{"name":"Astralux-FA199"}' http://localhost:5000/api/v1.0/moonlets
 
+## TODO: Add 'discovered' date to moonlet model
+## TODO: Finish http method ROUTES
+
 import os
 
 from flask import Flask
