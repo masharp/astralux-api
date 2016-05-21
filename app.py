@@ -16,7 +16,7 @@ app.config.from_object(os.environ['APP_SETTINGS']) ## load environment settings
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['CORS_HEADERS'] = 'Content-Type'
 auth = HTTPBasicAuth()
-cors = CORS(app, resources = { r'/api/*': { 'origins': '*' }}, supports_credentials = True)
+cors = CORS(app, resources = { r'/api/*': { 'origins': 'http://astralux.herokuapp.com' }}, supports_credentials = True)
 db = SQLAlchemy(app)
 
 ### Basic HTTP AUTH ###
