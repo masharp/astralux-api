@@ -157,10 +157,17 @@ def get_user(username):
 def update_moonlet(moonlet_id):
     return jsonify({ 'update': moonlet_id })
 
+## Updates a user's profile entry
 @app.route('/api/v1.0/users/<string:username>', methods=['PUT'])
 @auth.login_required
 def update_user(username):
     return jsonify({ 'update': username })
+
+## updates a user's moonlets and/or transaction history
+@app.route('/api/v1.0/users/<string:username>/<string:transaction>', methods=['PUT'])
+@auth.login_required
+def update_user_transactions(username, transaction):
+    print username, transaction
 
 ### HTTP POST ROUTES ###
 @app.route('/api/v1.0/moonlets', methods=['POST'])
