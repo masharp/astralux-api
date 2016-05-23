@@ -140,7 +140,7 @@ def get_user(username):
     try:
         result = User.query.filter_by(username = username).first()
 
-        if results is None:
+        if result is None:
             return make_response(jsonify({ 'error': 'User not found!' }), 404) # returns None if unfound
         else:
             result = result.serialize() # use class method to serialize each item
