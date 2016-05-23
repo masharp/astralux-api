@@ -61,15 +61,17 @@ class User(db.Model):
     display_name = db.Column(db.String()) # name of user
     balance = db.Column(db.Integer) # account coin balance
     moonlets = db.Column(JSON) # moonlet inventory
+    transactions = db.Column(JSON) # transaction history
 
     ## method runs the first time a moonlet is created
-    def __init__(self, usr, email, platform, name, balance, moonlets):
+    def __init__(self, usr, email, platform, name, balance, moonlets, transactions):
         self.username = usr
         self.email = email
         self.platform = platform
         self.display_name = name
         self.balance = balance
         self.moonlets = moonlets
+        self.transactions = transactions
 
     ## method represents the object when queried
     def __repr__(self):
@@ -84,5 +86,6 @@ class User(db.Model):
             'email': self.email,
             'platform': self.platform,
             'balance': self.balance,
-            'moonlets': self.moonlets
+            'moonlets': self.moonlets,
+            'transactions': self.transactions
         }

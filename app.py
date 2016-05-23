@@ -207,11 +207,12 @@ def create_user():
             platform = request.json.get('platform', 'Unknown'),
             name = request.json.get('name', 'J. Doe'),
             balance = request.json.get('balance', 2000),
-            moonlets = { 'moonlets': [] }
+            moonlets = { 'moonlets': [] },
+            transactions = { 'history': [] }
         )
         db.session.add(user)
         db.session.commit()
-        return jsonify({ 'messsage': 'New user saved to database'}), 201
+        return jsonify({ 'messsage': 'New user saved to database!'}), 201
 
     except Exception as error:
         print error
