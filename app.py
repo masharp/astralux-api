@@ -1,12 +1,16 @@
 #!flask/bin/python
 ## http://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
 ## https://realpython.com/blog/python/flask-by-example-part-2-postgres-sqlalchemy-and-alembic/
-## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" - POST -d '{"name":"Astralux-FA199"}' http://localhost:5000/api/v1.0/moonlets
+## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X POST -d '{"name":"Astralux-FA199"}' http://localhost:5000/api/v1.0/moonlets
+## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X PUT -d '{"timestamp": "05/21/16", "moonlet": 520200, "action":"purchase"}' http://localhost:5000/api/v1.0/users/admin
+
 
 ## TODO: Add 'discovered' date to moonlet model
 ## TODO: Finish http method ROUTES
 
 import os
+import json
+from datetime import datetime
 
 from flask import Flask
 from flask import jsonify, make_response, request, abort, url_for
@@ -157,31 +161,73 @@ def get_user(username):
 def update_moonlet(moonlet_id):
     return jsonify({ 'update': moonlet_id })
 
-## Updates a user's profile entry
+## Updates a user's profile entry - currently only ADDS a moonlet / transaction
 @app.route('/api/v1.0/users/<string:username>', methods=['PUT'])
 @auth.login_required
 def update_user(username):
-    return jsonify({ 'update': username })
+    if not request.json or not 'moonlet' in request.json:
+        abort(400)
 
-## updates a user's moonlets and/or transaction history
-@app.route('/api/v1.0/users/<string:username>/<string:transaction>', methods=['PUT'])
-@auth.login_required
-def update_user_transactions(username, transaction):
-    print username, transaction
+    from models import User, Moonlet
+
+    now = datetime.utcnow()
+    transactionType = request.json.get('action', 'purchase')
+    item = request.json['moonlet']
+    timestamp = request.json.get('timestamp', now)
+    newTransaction = { 'timestamp': timestamp, 'transaction': transactionType, 'moonlet': item }
+
+    try:
+        user = User.query.filter_by(username = username).first()
+        moonlet = Moonlet.query.filter_by(id = item).first()
+
+        if user is None or moonlet is None:
+            return make_response(jsonify({ 'error': 'User or moonlet not found!' }), 404) # returns None if unfound
+
+        else:
+            temp = user.serialize()
+
+            ## update transaction history with this transaction
+            userTransactions = temp['transactions']
+            userTransactions['history'].append(newTransaction)
+
+            ## update the user's moonlets with this transaction
+            userMoonlets = temp['moonlets']
+            userMoonlets = userMoonlets['moonlets']
+
+            ## if moonlets isn't empty and the current moonlet already exists
+            if len(userMoonlets) > 0 and item in userMoonlets[0]:
+                currentMoonletSize = userMoonlets[0][item]
+
+                userMoonlets[0][item] = currentMoonletSize + 1
+            else:
+                userMoonlets.append({ item: 1 })
+
+            temp['moonlets'] = { 'moonlets': userMoonlets }
+
+            user.moonlets = temp['moonlets']
+            user.transactions = userTransactions
+
+            db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
+            db.session.commit()
+            return jsonify({ 'message': 'User updated!' }), 201
+
+    except Exception as error:
+        print error
+        return make_response(jsonify({ 'error': 'Unable to update user!'}), 500)
 
 ### HTTP POST ROUTES ###
 @app.route('/api/v1.0/moonlets', methods=['POST'])
 @auth.login_required
 def create_moonlet():
-    from models import Moonlet
-
     if not request.json or not 'name' in request.json:
         abort(400)
+
+    from models import Moonlet
 
     try:
         moonlet = Moonlet( # create a new table item out of the posted json or defaults
             name = request.json['name'],
-            desc = request.json.get('description', "A newly discovered moonlet!"),
+            desc = request.json.get('description', 'A newly discovered moonlet!'),
             classif = request.json.get('classification', 'AA-Zeus'),
             color = request.json.get('color', 'Grey'),
             inv = request.json.get('inventory', 100),
@@ -202,10 +248,10 @@ def create_moonlet():
 @app.route('/api/v1.0/users', methods=['POST'])
 @auth.login_required
 def create_user():
-    from models import User
-
     if not request.json or not 'username' in request.json or not 'email' in request.json:
         abort(400)
+
+    from models import User
 
     try:
         user = User(
@@ -237,17 +283,21 @@ def delete_user(username):
     return jsonify({ 'delete': username })
 
 ### ERROR HANDLERS ###
+@app.errorhandler(405)
+def not_allowed(error):
+    return make_response(jsonify({ 'error': 'Request Not Allowed' }), 405)
+
 @app.errorhandler(404)
 def not_found(error):
-    return make_response(jsonify({ 'error': 'Not Found'}), 404)
+    return make_response(jsonify({ 'error': 'Not Found' }), 404)
 
 @app.errorhandler(400)
 def bad_request(error):
-    return make_response(jsonify({ 'error': 'Bad Request'}), 400)
+    return make_response(jsonify({ 'error': 'Bad Request' }), 400)
 
 @auth.error_handler
 def unauthorized():
-    return make_response(jsonify({ 'error': 'Unauthorized Access'}), 403)
+    return make_response(jsonify({ 'error': 'Unauthorized Access' }), 403)
 
 if __name__ == '__main__':
     app.run()
