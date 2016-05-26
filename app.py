@@ -11,6 +11,7 @@
 import os
 import json
 from datetime import datetime
+from random import randint
 
 from flask import Flask
 from flask import jsonify, make_response, request, abort, url_for
@@ -162,21 +163,98 @@ def update_moonlet(moonlet_id):
     return jsonify({ 'update': moonlet_id })
 
 # updates a user's refunds
+@app.route('/api/v1.0/users/refund/<string:username>', methods=['PUT'])
+@auth.login_required
+def update_user_refund(username):
+    if not request.json or not 'transaction' in request.json:
+        abort(400)
+
+    from models import User
+
+    now = str(datetime.utcnow())
+    timestamp = request.json.get('timestamp', now)
+    transactionID = int(request.json['transaction'])
+    transactionType = 'refund'
+
+    try:
+        user = User.query.filter_by(username = username).first()
+
+        if user is None:
+            return make_response(jsonify({ 'error': 'User or moonlet not found!' }), 404) # returns None if unfound
+
+        temp = user.serialize()
+        pastTransactions = temp['transactions']
+        refundTransaction = None
+
+        for x in pastTransactions['history']:
+            currentID = int(x['id'])
+            if currentID == transactionID and x['transaction'] != 'refund':
+                refundTransaction = x
+
+        if refundTransaction is None:
+            return make_response(jsonify({ 'error': 'Transaction not found!' }), 404)
+
+        item = str(refundTransaction['moonlet'])
+        amount = int(refundTransaction['amount'])
+        price = int(refundTransaction['price'])
+        transactionID = refundTransaction['id']
+
+        newTransaction = {
+            'timestamp': timestamp,
+            'transaction': transactionType,
+            'moonlet': item,
+            'amount': amount,
+            'price': price,
+            'id': transactionID
+        }
+
+        ## update user's current account balance
+        updatedBalance = temp['balance'] + price
+
+        ## update transaction history with this transaction
+        updatedTransactions = temp['transactions']
+        updatedTransactions['history'].append(newTransaction)
+
+        ## update the user's moonlets with this transaction
+        updatedMoonlets = temp['moonlets']
+        updatedMoonlets[item] -= amount
+
+        user.balance = updatedBalance
+        user.moonlets = updatedMoonlets
+        user.transactions = updatedTransactions
+
+        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
+        db.session.commit()
+        return jsonify({ 'message': 'User updated!' }), 201
+
+    except Exception as error:
+        print error
+        return make_response(jsonify({ 'error': 'Unable to update user!'}), 500)
+
 # Updates a user's purchases
 @app.route('/api/v1.0/users/purchase/<string:username>', methods=['PUT'])
 @auth.login_required
-def update_user(username):
+def update_user_purchase(username):
     if not request.json or not 'moonlet' in request.json or not 'price' in request.json:
         abort(400)
 
     from models import User, Moonlet
 
-    now = datetime.utcnow()
-    item = request.json['moonlet']
-    price = request.json['price']
+    now = str(datetime.utcnow())
+    item = str(request.json['moonlet'])
+    amount = int(request.json.get('amount', 1))
+    price = int(request.json['price']) * amount
     timestamp = request.json.get('timestamp', now)
-    transactionType = request.json.get('action', 'purchase')
-    newTransaction = { 'timestamp': timestamp, 'transaction': transactionType, 'moonlet': item, 'price': price }
+    transactionType = 'purchase'
+    transactionID = randint(1000, 9999) + randint(9999, 999999)
+    newTransaction = {
+        'timestamp': timestamp,
+        'transaction': transactionType,
+        'moonlet': item,
+        'price': price,
+        'id': transactionID,
+        'amount': amount
+    }
 
     try:
         user = User.query.filter_by(username = username).first()
@@ -185,32 +263,30 @@ def update_user(username):
         if user is None or moonlet is None:
             return make_response(jsonify({ 'error': 'User or moonlet not found!' }), 404) # returns None if unfound
 
+        temp = user.serialize()
+
+        ## update user's current account balance
+        updatedBalance = temp['balance'] - price
+
+        ## update transaction history with this transaction
+        updatedTransactions = temp['transactions']
+        updatedTransactions['history'].append(newTransaction)
+
+        ## update the user's moonlets with this transaction
+        updatedMoonlets = temp['moonlets']
+
+        if item in updatedMoonlets:
+            updatedMoonlets[item] += amount
         else:
-            temp = user.serialize()
+            updatedMoonlets[item] = amount
 
-            ## update user's current account balance
-            updatedBalance = temp['balance'] - int(price)
+        user.balance = updatedBalance
+        user.moonlets = updatedMoonlets
+        user.transactions = updatedTransactions
 
-            ## update transaction history with this transaction
-            updatedTransactions = temp['transactions']
-            updatedTransactions['history'].append(newTransaction)
-
-            ## update the user's moonlets with this transaction
-            updatedMoonlets = temp['moonlets']
-            item = str(item)
-
-            if item in updatedMoonlets:
-                updatedMoonlets[item] += 1
-            else:
-                updatedMoonlets[item] = 1
-
-            user.balance = updatedBalance
-            user.moonlets = updatedMoonlets
-            user.transactions = updatedTransactions
-
-            db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
-            db.session.commit()
-            return jsonify({ 'message': 'User updated!' }), 201
+        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
+        db.session.commit()
+        return jsonify({ 'message': 'User updated!' }), 201
 
     except Exception as error:
         print error
@@ -228,6 +304,7 @@ def create_moonlet():
     try:
         moonlet = Moonlet( # create a new table item out of the posted json or defaults
             name = request.json['name'],
+            idNum = randint(100000, 999999),
             desc = request.json.get('description', 'A newly discovered moonlet!'),
             classif = request.json.get('classification', 'AA-Zeus'),
             color = request.json.get('color', 'Grey'),

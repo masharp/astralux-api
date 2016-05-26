@@ -1,5 +1,4 @@
 from app import db
-from random import randint
 from sqlalchemy.dialects.postgresql import JSON
 
 class Moonlet(db.Model):
@@ -18,8 +17,8 @@ class Moonlet(db.Model):
     img_src = db.Column(db.String()) # local server url for the display image
 
     ## method runs the first time a moonlet is created
-    def __init__(self, name, desc, classif, color, inv, price, disc, sale, ltd, src):
-        self.id = randint(100000, 999999)
+    def __init__(self, idNum, name, desc, classif, color, inv, price, disc, sale, ltd, src):
+        self.id = idNum
         self.display_name = name
         self.description = desc
         self.classification = classif
