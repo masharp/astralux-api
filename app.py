@@ -66,7 +66,7 @@ def get_moonlets():
         print error
         return make_response(jsonify({ 'error': 'Unable to retrieve moonlets from database!' }), 500)
 
-@app.route('/api/v1.0/moonlets/<int:moonlet_id>', methods=['GET'])
+@app.route('/api/v1.0/moonlets/<int:moonlet_id>/<string:moonlet_name>', methods=['GET'])
 @auth.login_required
 def get_moonlet(moonlet_id):
     from models import Moonlet
