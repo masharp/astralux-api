@@ -68,7 +68,7 @@ def get_moonlets():
 
 @app.route('/api/v1.0/moonlets/<int:moonlet_id>/<string:moonlet_name>', methods=['GET'])
 @auth.login_required
-def get_moonlet(moonlet_id):
+def get_moonlet(moonlet_id, moonlet_name):
     from models import Moonlet
 
     try:
