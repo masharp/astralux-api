@@ -40,7 +40,7 @@ def make_public_moonlet(moonlet):
 
     for field in moonlet:
         if field == 'id':
-            new_moonlet['uri'] = url_for('get_moonlet', moonlet_id = moonlet['id'], moonlet_name = moonlet['display_name'] _external = True)
+            new_moonlet['uri'] = url_for('get_moonlet', moonlet_id = moonlet['id'], moonlet_name = moonlet['display_name'], _external = True)
         else:
             new_moonlet[field] = moonlet[field]
     return new_moonlet
