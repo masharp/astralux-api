@@ -161,20 +161,22 @@ def get_user(username):
 def update_moonlet(moonlet_id):
     return jsonify({ 'update': moonlet_id })
 
-## Updates a user's profile entry - currently only ADDS a moonlet / transaction
-@app.route('/api/v1.0/users/<string:username>', methods=['PUT'])
+# updates a user's refunds
+# Updates a user's purchases
+@app.route('/api/v1.0/users/purchase/<string:username>', methods=['PUT'])
 @auth.login_required
 def update_user(username):
-    if not request.json or not 'moonlet' in request.json:
+    if not request.json or not 'moonlet' in request.json or not 'price' in request.json:
         abort(400)
 
     from models import User, Moonlet
 
     now = datetime.utcnow()
-    transactionType = request.json.get('action', 'purchase')
     item = request.json['moonlet']
+    price = request.json['price']
     timestamp = request.json.get('timestamp', now)
-    newTransaction = { 'timestamp': timestamp, 'transaction': transactionType, 'moonlet': item }
+    transactionType = request.json.get('action', 'purchase')
+    newTransaction = { 'timestamp': timestamp, 'transaction': transactionType, 'moonlet': item, 'price': price }
 
     try:
         user = User.query.filter_by(username = username).first()
@@ -186,26 +188,25 @@ def update_user(username):
         else:
             temp = user.serialize()
 
+            ## update user's current account balance
+            updatedBalance = temp['balance'] - int(price)
+
             ## update transaction history with this transaction
-            userTransactions = temp['transactions']
-            userTransactions['history'].append(newTransaction)
+            updatedTransactions = temp['transactions']
+            updatedTransactions['history'].append(newTransaction)
 
             ## update the user's moonlets with this transaction
-            userMoonlets = temp['moonlets']
-            userMoonlets = userMoonlets['moonlets']
+            updatedMoonlets = temp['moonlets']
+            item = str(item)
 
-            ## if moonlets isn't empty and the current moonlet already exists
-            if len(userMoonlets) > 0 and item in userMoonlets[0]:
-                currentMoonletSize = userMoonlets[0][item]
-
-                userMoonlets[0][item] = currentMoonletSize + 1
+            if item in updatedMoonlets:
+                updatedMoonlets[item] += 1
             else:
-                userMoonlets.append({ item: 1 })
+                updatedMoonlets[item] = 1
 
-            temp['moonlets'] = { 'moonlets': userMoonlets }
-
-            user.moonlets = temp['moonlets']
-            user.transactions = userTransactions
+            user.balance = updatedBalance
+            user.moonlets = updatedMoonlets
+            user.transactions = updatedTransactions
 
             db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
             db.session.commit()
@@ -252,20 +253,26 @@ def create_user():
         abort(400)
 
     from models import User
+    username = request.json['username']
 
     try:
-        user = User(
-            usr = request.json['username'],
-            email = request.json['email'],
-            platform = request.json.get('platform', 'Unknown'),
-            name = request.json.get('name', 'J. Doe'),
-            balance = request.json.get('balance', 2000),
-            moonlets = { 'moonlets': [] },
-            transactions = { 'history': [] }
-        )
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({ 'messsage': 'New user saved to database!'}), 201
+        user = User.query.filter_by(username = username).first()
+
+        if user is not None:
+            return make_response(jsonify({ 'error': 'User already exists' }), 404)
+        else:
+            user = User(
+                usr = username,
+                email = request.json['email'],
+                platform = request.json.get('platform', 'Unknown'),
+                name = request.json.get('name', 'J. Doe'),
+                balance = request.json.get('balance', 10000),
+                moonlets = { },
+                transactions = { 'history': [] }
+            )
+            db.session.add(user)
+            db.session.commit()
+            return jsonify({ 'messsage': 'New user saved to database!'}), 201
 
     except Exception as error:
         print error
