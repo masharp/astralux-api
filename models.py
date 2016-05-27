@@ -51,6 +51,10 @@ class Moonlet(db.Model):
             'img_src': self.img_src
         }
 
+    ## class method to close the session used to query
+    def close():
+        db.session.close()
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -61,9 +65,10 @@ class User(db.Model):
     balance = db.Column(db.Integer) # account coin balance
     moonlets = db.Column(JSON) # moonlet inventory
     transactions = db.Column(JSON) # transaction history
+    cart = db.Column(JSON) # saved cart
 
     ## method runs the first time a moonlet is created
-    def __init__(self, usr, email, platform, name, balance, moonlets, transactions):
+    def __init__(self, usr, email, platform, name, balance, moonlets, transactions, cart):
         self.username = usr
         self.email = email
         self.platform = platform
@@ -71,6 +76,7 @@ class User(db.Model):
         self.balance = balance
         self.moonlets = moonlets
         self.transactions = transactions
+        self.cart = cart
 
     ## method represents the object when queried
     def __repr__(self):
@@ -86,5 +92,10 @@ class User(db.Model):
             'platform': self.platform,
             'balance': self.balance,
             'moonlets': self.moonlets,
-            'transactions': self.transactions
+            'transactions': self.transactions,
+            'cart': self.cart
         }
+
+    ## class method to close the session used to query
+    def close(args):
+        db.session.close()

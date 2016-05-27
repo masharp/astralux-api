@@ -9,6 +9,7 @@ class Config(object):
     TESTING = False
     CSRF_ENABLED = True
     MASTER_PASSWORD = os.environ['MASTER_PASSWORD']
+    MASTER_USERNAME = os.environ['MASTER_USERNAME']
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 
 class ProductionConfig(Config):
