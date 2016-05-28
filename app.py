@@ -7,7 +7,7 @@
 import os
 from datetime import datetime
 from random import randint
-from lib.make_error_response import make_error_response
+from modules.make_error_response import make_error_response
 
 from flask import Flask
 from flask import jsonify, request, abort, url_for
