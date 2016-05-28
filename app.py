@@ -5,12 +5,12 @@
 ## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X PUT -d '{"timestamp": "05/21/16", "moonlet": 520200, "action":"purchase"}' http://localhost:5000/api/v1.0/users/admin
 
 import os
-import json
 from datetime import datetime
 from random import randint
+from lib.make_error_response import make_error_response
 
 from flask import Flask
-from flask import jsonify, make_response, request, abort, url_for
+from flask import jsonify, request, abort, url_for
 from flask.ext.httpauth import HTTPBasicAuth
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.cors import CORS
@@ -22,10 +22,6 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 auth = HTTPBasicAuth()
 cors = CORS(app, resources = r'/api/*', supports_credentials = True)
 db = SQLAlchemy(app)
-
-### Basic Error Message Generator ###
-def make_error_response(message = 'Internal Error!', code = 500):
-    return make_response(jsonify({ 'error': message }), code)
 
 ### Basic HTTP AUTH ###
 @auth.get_password
@@ -41,14 +37,13 @@ def get_moonlets():
 
     try:
         results = Moonlet.query.all() # query database via sqlalchemy
+
         results = [ item.serialize() for item in results ] # use class method to serialize each item
-
-
         return jsonify({ 'moonlets': results }), 201 # return as json
 
     except Exception as error:
         print error
-        return make_error_response('Unable to retrieve moonlets from database!', 500)
+        abort(500)
 
 @app.route('/api/moonlets/<int:moonlet_id>/<string:moonlet_name>', methods=['GET'])
 @auth.login_required
@@ -57,14 +52,14 @@ def get_moonlet(moonlet_id, moonlet_name):
 
     try:
         result = Moonlet.query.filter_by(id = moonlet_id).first() # query for moonlet
-        if result is None: return make_error_response('Moonlet not found!', 404) # returns None if unfound
-        result = result.serialize()
+        if result is None: abort(404)
 
+        result = result.serialize()
         return jsonify({ 'moonlet': result }), 201
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 @app.route('/api/moonlets/sale', methods=['GET'])
 @auth.login_required
@@ -72,14 +67,14 @@ def get_sales():
     from models import Moonlet
     try:
         results = Moonlet.query.filter(Moonlet.on_sale == True).all()
-        if results is None: return make_error_response('No moonlets are on sale!', 404)# returns None if unfound
-        results = [ item.serialize() for item in results ] # use class method to serialize each item
+        if results is None: abort(404) # returns None if unfound
 
+        results = [ item.serialize() for item in results ] # use class method to serialize each item
         return jsonify({ 'moonlets': results }), 201 # return as json
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 @app.route('/api/moonlets/limited', methods=['GET'])
 @auth.login_required
@@ -88,14 +83,14 @@ def get_limited():
 
     try:
         results = Moonlet.query.filter(Moonlet.limited == True).all()
-        if results is None: return make_error_response('No moonlets are limited!', 404) # returns None if unfound
-        results = [ item.serialize() for item in results ] # use class method to serialize each item
+        if results is None: abort(404) # returns None if unfound
 
+        results = [ item.serialize() for item in results ] # use class method to serialize each item
         return jsonify({ 'moonlets': results }), 201 # return as json
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 @app.route('/api/users', methods=['GET'])
 @auth.login_required
@@ -104,13 +99,13 @@ def get_users():
 
     try:
         results = User.query.all() # query database via sqlalchemy
-        results = [ item.serialize() for item in results ] # use class method to serialize each item
 
+        results = [ item.serialize() for item in results ] # use class method to serialize each item
         return jsonify({ 'users': results }), 201 # return as json
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 @app.route('/api/users/<string:username>', methods=['GET'])
 @auth.login_required
@@ -119,20 +114,38 @@ def get_user(username):
 
     try:
         result = User.query.filter_by(username = username).first()
-        if result is None: return make_error_response('User not found!', 404) # returns None if unfound
-        result = result.serialize() # use class method to serialize each item
+        if result is None: abort(404) # returns None if unfound
 
+        result = result.serialize() # use class method to serialize each item
         return jsonify({ 'user': result }), 201 # return as json
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 ### HTTP PUT ROUTES ###
 @app.route('/api/moonlets/<int:moonlet_id>', methods=['PUT'])
 @auth.login_required
 def update_moonlet(moonlet_id):
-    return jsonify({ 'update': moonlet_id })
+    if not request.json or not 'update' in request.json:
+        abort(400)
+
+    from models import Moonlet
+    update = request.json['update']
+
+    try:
+        moonlet = Moonlet.query.filter_by(id = moonlet_id).first()
+        if moonlet is None: abort(404)
+
+        ## add if checks on the update and then update
+        ##db.session.merge(moonlet)
+        ##db.session.commit()
+
+        return(jsonify({ 'message': 'Moonlet updated!'})), 201
+
+    except Exception as error:
+        print error
+        abort(500)
 
 # currently only updates a user's email
 @app.route('/api/users/<string:username>', methods=['PUT'])
@@ -142,7 +155,6 @@ def update_user(username):
         abort(400)
 
     from models import User
-
     newEmail = str(request.json['email'])
     simpleEmailAuth = newEmail.split('@')
 
@@ -150,7 +162,8 @@ def update_user(username):
 
     try:
         user = User.query.filter_by(username = username).first()
-        if user is None: return make_error_response('User or moonlet not found!', 404)
+        if user is None: abort(404)
+
         user.email = newEmail
 
         db.session.merge(user)
@@ -160,7 +173,7 @@ def update_user(username):
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 # updates a user's refunds
 @app.route('/api/users/refund/<string:username>', methods=['PUT'])
@@ -179,7 +192,7 @@ def update_user_refund(username):
     try:
         user = User.query.filter_by(username = username).first()
 
-        if user is None: return make_error_response('User or moonlet not found!', 404) # returns None if unfound
+        if user is None: abort(404) # returns None if unfound
 
         temp = user.serialize()
         pastTransactions = temp['transactions']
@@ -190,8 +203,7 @@ def update_user_refund(username):
             if currentID == transactionID and x['transaction'] != 'refund':
                 refundTransaction = x
 
-        if refundTransaction is None:
-            return make_error_response('Transaction not found!', 404)
+        if refundTransaction is None: return make_error_response('Transaction not found!', 404)
 
         item = str(refundTransaction['moonlet'])
         amount = int(refundTransaction['amount'])
@@ -229,9 +241,9 @@ def update_user_refund(username):
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
-# Updates a user's purchases
+# Updates a user's purchases - refactor to just use the user's current cart
 @app.route('/api/users/purchase/<string:username>', methods=['PUT'])
 @auth.login_required
 def update_user_purchase(username):
@@ -261,7 +273,7 @@ def update_user_purchase(username):
         user = User.query.filter_by(username = username).first()
         moonlet = Moonlet.query.filter_by(id = item).first()
 
-        if user is None or moonlet is None: return make_error_response('User or moonlet not found!', 404) # returns None if unfound
+        if user is None or moonlet is None: abort(404) # returns None if unfound
 
         temp = user.serialize()
 
@@ -291,7 +303,7 @@ def update_user_purchase(username):
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 ### HTTP POST ROUTES ###
 @app.route('/api/moonlets', methods=['POST'])
@@ -306,7 +318,7 @@ def create_moonlet():
     try:
         moonlet = Moonlet.query.filter_by(display_name = newName).first()
 
-        if moonlet is not None: return make_error_response('Moonlet already exists!', 404)
+        if moonlet is not None: return make_error_response('Moonlet already exists!', 400)
 
         newMoonlet = Moonlet( # create a new table item out of the posted json or defaults
             name = newName,
@@ -329,7 +341,7 @@ def create_moonlet():
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 @app.route('/api/users', methods=['POST'])
 @auth.login_required
@@ -343,7 +355,7 @@ def create_user():
     try:
         user = User.query.filter_by(username = username).first()
 
-        if user is not None: return make_error_response('User already exists', 404)
+        if user is not None: return make_error_response('User already exists', 400)
         user = User(
             usr = username,
             email = request.json.get('email', ''),
@@ -361,13 +373,27 @@ def create_user():
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 #### HTTP DELETE ROUTES ###
 @app.route('/api/moonlets/<int:moonlet_id>', methods=['DELETE'])
 @auth.login_required
-def delete_moonlet():
-    return jsonify({ 'delete': moonlet_id })
+def delete_moonlet(moonlet_id):
+    from models import Moonlet
+
+    try:
+        moonlet = Moonlet.query.filter_by(id = moonlet_id).first()
+        if moonlet is None: abort(404)
+        moonlet.close() # internal session closure to remove conflict
+
+        db.session.delete(moonlet)
+        db.session.commit()
+
+        return jsonify({ 'messsage': 'Moonlet successfully deleted!'}), 201
+
+    except Exception as error:
+        print error
+        abort(500)
 
 @app.route('/api/users/<string:username>', methods=['DELETE'])
 @auth.login_required
@@ -376,8 +402,8 @@ def delete_user(username):
 
     try:
         user = User.query.filter_by(username = username).first()
-        if user is None: return make_error_response('User does not exist!', 404)
-        user.close()
+        if user is None: abort(404)
+        user.close() # internal session closure to remove conflict
 
         db.session.delete(user)
         db.session.commit()
@@ -386,7 +412,7 @@ def delete_user(username):
 
     except Exception as error:
         print error
-        return make_error_response()
+        abort(500)
 
 ### ERROR HANDLERS ###
 @app.errorhandler(405)
@@ -395,11 +421,15 @@ def not_allowed(error):
 
 @app.errorhandler(404)
 def not_found(error):
-    return make_error_response('Not Found', 404)
+    return make_error_response('User or Moonlet Not Found', 404)
 
 @app.errorhandler(400)
 def bad_request(error):
     return make_error_response('Bad Request', 400)
+
+@app.errorhandler(500)
+def internal_error(error):
+    return make_error_response('Internal Error', 500)
 
 @auth.error_handler
 def unauthorized():
