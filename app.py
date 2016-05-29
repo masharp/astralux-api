@@ -262,7 +262,7 @@ def update_user_refund(username):
         # Update user's database entry with new values
         user.balance = currentBalance
         user.moonlets = currentMoonlets
-        user.transaction = newHistory
+        user.transactions = newHistory
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
