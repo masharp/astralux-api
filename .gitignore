@@ -22,3 +22,7 @@ flask/lib/
 flask/include/
 flask/share/
 flask/local/
+share
+include
+bin
+local
