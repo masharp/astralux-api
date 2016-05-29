@@ -226,27 +226,23 @@ def update_user_refund(username):
         # pull out fields to be modified
         temp = user.serialize()
         currentTransactions = temp['transactions']['history']
+        newHistory = { 'history': [] } # new history array to be updated to user store after refund item removed for history
         currentBalance = temp['balance']
         currentMoonlets = temp['moonlets']
         refundAmount = 0
         refundTransaction = None
-        identifiedTransactions = 0 # if there are more than 1 transactions of same id, item already refunded
 
         # find the transaction to be refunded
         for x in currentTransactions:
             currentID = int(x['id'])
 
-            # count number of same transaction ids
-            if currentID == transactionID:
-                identifiedTransactions += 1
-
-                # assume this is the transaction
-                if x['transaction'] != 'refund':
-                    refundTransaction = x
+            if currentID == transactionID and x['transaction'] != 'refund':
+                refundTransaction = x
+            else:
+                newHistory['history'].append(x) # add other transactions to the new history array
 
         # if empty, transaction not found, if more than 1 transaction, transaction already refunded
         if refundTransaction is None: return make_error_response('Transaction not found!', 404)
-        if identifiedTransactions != 1: return make_error_response('Transaction already refunded!', 400)
 
         # calculate cost of transaction and finish construction of transaction object
         for y in refundTransaction['moonlets']:
@@ -261,12 +257,12 @@ def update_user_refund(username):
 
         newTransaction['price'] = refundAmount
         currentBalance += refundAmount # update user's balance entry after refund
-        currentTransactions.append(newTransaction) # update user's transaction entries
+        newHistory['history'].append(newTransaction) # update user's transaction entries
 
         # Update user's database entry with new values
         user.balance = currentBalance
         user.moonlets = currentMoonlets
-        user.transaction = currentTransactions
+        user.transaction = newHistory
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
