@@ -17,8 +17,8 @@ node_modules
 
 # Virtualenv
 .Python
-flask/bin
-flask/lib
-flask/include
-flask/share
-flask/local
+flask/bin/
+flask/lib/
+flask/include/
+flask/share/
+flask/local/
