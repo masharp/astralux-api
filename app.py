@@ -264,8 +264,8 @@ def update_user_refund(username):
         user.moonlets = currentMoonlets
         user.transaction = newHistory
 
-        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
-        db.session.commit()
+        #db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
+        #db.session.commit()
 
         # return the transction created by the refund to be used by the view
         return jsonify({ 'message': 'Refund Made!', 'transaction': newTransaction }), 201
