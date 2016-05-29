@@ -325,7 +325,7 @@ def update_user_purchase(username):
         # Update user's database entry with new values
         user.balance = currentBalance
         user.moonlets = currentMoonlets
-        user.transaction = currentTransactions
+        user.transactions = currentTransactions
         user.cart = { }
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
