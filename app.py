@@ -267,7 +267,8 @@ def update_user_refund(username):
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
 
-        return jsonify({ 'message': 'Refund Made!' }), 201
+        # return the transction created by the refund to be used by the view
+        return jsonify({ 'message': 'Refund Made!', 'transaction': newTransaction }), 201
 
     except Exception as error:
         print error
