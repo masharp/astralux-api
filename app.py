@@ -411,7 +411,6 @@ def create_user():
 @auth.login_required
 def delete_moonlet(moonlet_id):
     from models import Moonlet
-
     try:
         moonlet = Moonlet.query.filter_by(id = moonlet_id).first()
         if moonlet is None: return make_error_response('User or Moonlet Not Found', 404)
@@ -436,8 +435,8 @@ def delete_user(username):
         if user is None: return make_error_response('User or Moonlet Not Found', 404)
         user.close() # internal session closure to remove conflict
 
-        #db.session.delete(user)
-        #db.session.commit()
+        db.session.delete(user)
+        db.session.commit()
 
         return jsonify({ 'messsage': 'User successfully deleted!'}), 201
 
