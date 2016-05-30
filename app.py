@@ -436,8 +436,8 @@ def delete_user(username):
         if user is None: return make_error_response('User or Moonlet Not Found', 404)
         user.close() # internal session closure to remove conflict
 
-        db.session.delete(user)
-        db.session.commit()
+        #db.session.delete(user)
+        #db.session.commit()
 
         return jsonify({ 'messsage': 'User successfully deleted!'}), 201
 
