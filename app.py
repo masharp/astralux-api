@@ -45,9 +45,9 @@ def get_moonlets():
         print error
         abort(500)
 
-@app.route('/api/moonlets/<int:moonlet_id>/<string:moonlet_name>', methods=['GET'])
+@app.route('/api/moonlets/<int:moonlet_id>', methods=['GET'])
 @auth.login_required
-def get_moonlet(moonlet_id, moonlet_name):
+def get_moonlet(moonlet_id):
     from models import Moonlet
 
     try:
