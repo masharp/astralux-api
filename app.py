@@ -5,6 +5,7 @@
 ## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X PUT -d '{"timestamp": "05/21/16", "moonlet": 520200, "action":"purchase"}' http://localhost:5000/api/v1.0/users/admin
 
 import os
+import types
 from datetime import datetime
 from random import randint
 from modules.make_error_response import make_error_response
@@ -137,9 +138,81 @@ def update_moonlet(moonlet_id):
         moonlet = Moonlet.query.filter_by(id = moonlet_id).first()
         if moonlet is None: return make_error_response('User or Moonlet Not Found', 404)
 
-        ## add if checks on the update and then update
-        ##db.session.merge(moonlet)
-        ##db.session.commit()
+        #check the update object for the field that need updated, then type check and update
+        if 'img_src' in update:
+            new_src = update['img_src']
+
+            if not isinstance(new_src, types.UnicodeType):
+                return make_error_response('Update.img_source must be a string!', 400)
+
+            moonlet.img_src = new_src
+
+        if 'color' in update:
+            new_color = update['color']
+
+            if not isinstance(new_color, types.UnicodeType):
+                return make_error_response('Update.color must be a string!', 400)
+
+            moonlet.color = new_color
+
+        if 'price' in update:
+            new_price = update['price']
+
+            if not isinstance(new_price, types.IntType):
+                return make_error_response('Update.price must be an int!', 400)
+
+            moonlet.price = new_price
+
+        if 'discount' in update:
+            new_discount = update['discount']
+
+            if not isinstance(new_discount, types.IntType):
+                return make_error_response('Update.discount must be an int!', 400)
+
+            moonlet.discount = new_discount
+
+        if 'inventory' in update:
+            new_inv = update['inventory']
+
+            if not isinstance(new_inv, types.IntType):
+                return make_error_response('Update.inventory must be an int!', 400)
+
+            moonlet.inventory = new_inv
+
+        if 'description' in update:
+            new_desc = update['description']
+
+            if not isinstance(new_desc, types.UnicodeType):
+                return make_error_response('Update.description must be a string!', 400)
+
+            moonlet.description = new_desc
+
+        if 'classification' in update:
+            new_class = update['classification']
+
+            if not isinstance(new_class, types.UnicodeType):
+                return make_error_response('Update.classification must be a string!', 400)
+
+            moonlet.classification = new_class
+
+        if 'featured' in update:
+            new_featured = update['featured']
+
+            if not isinstance(new_featured, types.BooleanType):
+                return make_error_response('Update.featured must be a bool!', 400)
+
+            moonlet.featured = new_featured
+
+        if 'sale' in update:
+            new_sale = update['sale']
+
+            if not isinstance(new_sale, types.BooleanType):
+                return make_error_response('Update.featured must be a bool!', 400)
+
+            moonlet.sale = new_sale
+
+        db.session.merge(moonlet)
+        db.session.commit()
 
         return(jsonify({ 'message': 'Moonlet updated!'})), 201
 
