@@ -435,7 +435,7 @@ def create_moonlet():
             disc = request.json.get('discount', 10),
             sale = request.json.get('sale', False),
             ltd = request.json.get('limited', False),
-            src = request.json.get('src', '/assets/moonlets/generic.jpg')
+            src = request.json.get('img_src', '/assets/moonlets/generic.png')
         )
 
         db.session.add(newMoonlet)
