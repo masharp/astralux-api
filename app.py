@@ -195,13 +195,13 @@ def update_moonlet(moonlet_id):
 
             moonlet.classification = new_class
 
-        if 'featured' in update:
-            new_featured = update['featured']
+        if 'limited' in update:
+            new_limited = update['limited']
 
-            if not isinstance(new_featured, types.BooleanType):
-                return make_error_response('Update.featured must be a bool!', 400)
+            if not isinstance(new_limited, types.BooleanType):
+                return make_error_response('Update.limited must be a bool!', 400)
 
-            moonlet.featured = new_featured
+            moonlet.limited = new_limited
 
         if 'sale' in update:
             new_sale = update['sale']
