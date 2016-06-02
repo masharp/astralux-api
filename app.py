@@ -209,7 +209,7 @@ def update_moonlet(moonlet_id):
             if not isinstance(new_sale, types.BooleanType):
                 return make_error_response('Update.featured must be a bool!', 400)
 
-            moonlet.sale = new_sale
+            moonlet.on_sale = new_sale
 
         db.session.merge(moonlet)
         db.session.commit()
@@ -433,7 +433,7 @@ def create_moonlet():
             inv = request.json.get('inventory', 100),
             price = request.json.get('price', 1000),
             disc = request.json.get('discount', 10),
-            sale = request.json.get('sale', False),
+            sale = request.json.get('on_sale', False),
             ltd = request.json.get('limited', False),
             src = request.json.get('img_src', '/assets/moonlets/generic.png')
         )
