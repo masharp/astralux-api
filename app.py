@@ -24,6 +24,8 @@ auth = HTTPBasicAuth()
 cors = CORS(app, resources = r'/api/*', supports_credentials = True)
 db = SQLAlchemy(app)
 
+from models import *
+
 ### Basic HTTP AUTH ###
 @auth.get_password
 def get_password(username):
@@ -34,8 +36,6 @@ def get_password(username):
 @app.route('/api/moonlets', methods=['GET'])
 @auth.login_required
 def get_moonlets():
-    from models import Moonlet
-
     try:
         results = Moonlet.query.all() # query database via sqlalchemy
 
@@ -49,8 +49,6 @@ def get_moonlets():
 @app.route('/api/moonlets/<int:moonlet_id>', methods=['GET'])
 @auth.login_required
 def get_moonlet(moonlet_id):
-    from models import Moonlet
-
     try:
         result = Moonlet.query.filter_by(id = moonlet_id).first() # query for moonlet
         if result is None: return make_error_response('User or Moonlet Not Found', 404)
@@ -65,7 +63,6 @@ def get_moonlet(moonlet_id):
 @app.route('/api/moonlets/sale', methods=['GET'])
 @auth.login_required
 def get_sales():
-    from models import Moonlet
     try:
         results = Moonlet.query.filter(Moonlet.on_sale == True).all()
         if results is None: return make_error_response('User or Moonlet Not Found', 404) # returns None if unfound
@@ -80,8 +77,6 @@ def get_sales():
 @app.route('/api/moonlets/limited', methods=['GET'])
 @auth.login_required
 def get_limited():
-    from models import Moonlet
-
     try:
         results = Moonlet.query.filter(Moonlet.limited == True).all()
         if results is None: return make_error_response('User or Moonlet Not Found', 404) # returns None if unfound
@@ -96,8 +91,6 @@ def get_limited():
 @app.route('/api/users', methods=['GET'])
 @auth.login_required
 def get_users():
-    from models import User
-
     try:
         results = User.query.all() # query database via sqlalchemy
 
@@ -111,8 +104,6 @@ def get_users():
 @app.route('/api/users/<string:username>', methods=['GET'])
 @auth.login_required
 def get_user(username):
-    from models import User
-
     try:
         result = User.query.filter_by(username = username).first()
         if result is None: return make_error_response('User or Moonlet Not Found', 404) # returns None if unfound
@@ -131,7 +122,6 @@ def update_moonlet(moonlet_id):
     if not request.json or not 'update' in request.json:
         abort(400)
 
-    from models import Moonlet
     update = request.json['update']
 
     try:
@@ -227,7 +217,6 @@ def update_user(username):
     if not request.json or not 'email' in request.json:
         abort(400)
 
-    from models import User
     newEmail = str(request.json['email'])
     simpleEmailAuth = newEmail.split('@')
 
@@ -255,7 +244,6 @@ def update_user_cart(username):
     if not request.json or not 'cart' in request.json:
         abort (400)
 
-    from models import User
     cart = { "cart": request.json['cart'] }
 
     try:
@@ -277,8 +265,6 @@ def update_user_cart(username):
 def update_user_refund(username):
     if not request.json or not 'transaction' in request.json:
         abort(400)
-
-    from models import User
 
     # set up a new transction refund
     now = str(datetime.utcnow())
@@ -352,8 +338,6 @@ def update_user_refund(username):
 @auth.login_required
 def update_user_purchase(username):
 
-    from models import User
-
     now = str(datetime.utcnow())
     transactionID = randint(1000, 9999) + randint(9999, 999999)
 
@@ -391,6 +375,13 @@ def update_user_purchase(username):
             else:
                 currentMoonlets[item] = amount
 
+            ## Reflect new purchase in moonlet inventory
+            moonlet = Moonlet.query.filter_by(id = moonlet_id).first()
+            tempInv = moonlet.inventory
+            tempInv = tempInv - amount
+            moonlet.inventory = tempInv
+            db.session.merge(moonlet) ## merge changes to this moonlet
+
         newTransaction['price'] = transactionCost
         currentBalance -= transactionCost # update user's balance entry after transaction
         currentTransactions.append(newTransaction) # update user's transaction entries
@@ -404,7 +395,7 @@ def update_user_purchase(username):
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
 
-        return jsonify({ 'message': 'Purchase Made!' }), 201
+        return jsonify({ 'message': 'Purchase Made!', transaction: newTransaction }), 201
 
     except Exception as error:
         print error
@@ -417,7 +408,6 @@ def create_moonlet():
     if not request.json or not 'name' in request.json:
         abort(400)
 
-    from models import Moonlet
     newName = request.json['name']
 
     try:
@@ -453,7 +443,6 @@ def create_user():
     if not request.json or not 'username' in request.json:
         abort(400)
 
-    from models import User
     username = request.json['username']
 
     try:
@@ -483,7 +472,6 @@ def create_user():
 @app.route('/api/moonlets/<int:moonlet_id>', methods=['DELETE'])
 @auth.login_required
 def delete_moonlet(moonlet_id):
-    from models import Moonlet
     try:
         moonlet = Moonlet.query.filter_by(id = moonlet_id).first()
         if moonlet is None: return make_error_response('User or Moonlet Not Found', 404)
@@ -501,8 +489,6 @@ def delete_moonlet(moonlet_id):
 @app.route('/api/users/<string:username>', methods=['DELETE'])
 @auth.login_required
 def delete_user(username):
-    from models import User
-
     try:
         user = User.query.filter_by(username = username).first()
         if user is None: return make_error_response('User or Moonlet Not Found', 404)
