@@ -4,8 +4,7 @@
 ## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X POST -d '{"name":"Astralux-FA199"}' http://localhost:5000/api/v1.0/moonlets
 ## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X PUT -d '{"timestamp": "05/21/16", "moonlet": 520200, "action":"purchase"}' http://localhost:5000/api/v1.0/users/admin
 
-import os
-import types
+import os, types, json
 from datetime import datetime
 from random import randint
 from modules.make_error_response import make_error_response
@@ -244,7 +243,8 @@ def update_user_cart(username):
     if not request.json or not 'cart' in request.json:
         abort (400)
 
-    cart = { 'cart': request.json['cart'] }
+    cart = request.json['cart']
+    cart = [json.dumps(x) for x in cart]
 
     try:
         user = User.query.filter_by(username = username).first()
@@ -284,8 +284,8 @@ def update_user_refund(username):
 
         # pull out fields to be modified
         temp = user.serialize()
-        currentTransactions = temp['transactions']['history']
-        newHistory = { 'history': [] } # new history array to be updated to user store after refund item removed for history
+        currentTransactions = temp['transactions']
+        newHistory = [] # new history array to be updated to user store after refund item removed for history
         currentBalance = temp['balance']
         currentMoonlets = temp['moonlets']
         refundAmount = 0
@@ -298,7 +298,7 @@ def update_user_refund(username):
             if currentID == transactionID and x['transaction'] != 'refund':
                 refundTransaction = x
             else:
-                newHistory['history'].append(x) # add other transactions to the new history array
+                newHistory.append(x) # add other transactions to the new history array
 
         # if empty, transaction not found, if more than 1 transaction, transaction already refunded
         if refundTransaction is None: return make_error_response('Transaction not found!', 404)
@@ -316,7 +316,7 @@ def update_user_refund(username):
 
         newTransaction['price'] = refundAmount
         currentBalance += refundAmount # update user's balance entry after refund
-        newHistory['history'].append(newTransaction) # update user's transaction entries
+        newHistory.append(newTransaction) # update user's transaction entries
 
         # Update user's database entry with new values
         user.balance = currentBalance
@@ -361,21 +361,28 @@ def update_user_purchase(username):
 
         # pull out information to be modified
         temp = user.serialize()
-        currentCart = temp['cart']['cart']
-        currentBalance = temp['balance']
-        currentTransactions = temp['transactions']['history']
+
+        currentCart = temp['cart']
+        currentCart = [json.loads(x) for x in currentCart] # parse json
+
+        currentTransactions = temp['transactions']
+        currentTransactions = [json.loads(y) for y in currentTransactions] # parse json
+
         currentMoonlets = temp['moonlets']
+        currentMoonlets = [json.loads(z) for z in currentMoonlets] # parse json
+
+        currentBalance = temp['balance']
         transactionCost = 0 # cost of this transaction
 
         ## check if sent cart matches stored cart
         if (currentCart != putCart or currentBalance != putBalance): return make_error_response('User Cart Invalid', 400)
 
         # calculate cost of transaction and finish construction of transaction object
-        for x in currentCart:
-            item = int(x['item'])
-            price = int(x['price'])
-            amount = int(x['amount'])
-            newTransaction['moonlets'].append(x)
+        for c in currentCart:
+            item = int(c['item'])
+            price = int(c['price'])
+            amount = int(c['amount'])
+            newTransaction['moonlets'].append(c)
             transactionCost += price * amount # amount of item * price of item
 
             ## add current moonlet to user's moonlet inventory
@@ -400,11 +407,11 @@ def update_user_purchase(username):
         # Update user's database entry with new values
         user.balance = currentBalance
         user.moonlets = currentMoonlets
-        user.transactions = { 'history': currentTransactions }
-        user.cart = { 'cart': [] }
+        user.transactions = currentTransactions
+        user.cart = []
 
-        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
-        db.session.commit()
+        #db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
+        #db.session.commit()
 
         return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
 
@@ -466,9 +473,9 @@ def create_user():
             platform = request.json.get('platform', ''),
             name = request.json.get('name', 'J. Doe'),
             balance = request.json.get('balance', 10000),
-            moonlets = { },
-            transactions = { 'history': [] },
-            cart = { 'cart': [] }
+            moonlets = {},
+            transactions = {},
+            cart = {}
         )
         db.session.add(user)
         db.session.commit()
