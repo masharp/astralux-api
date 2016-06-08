@@ -358,8 +358,8 @@ def update_user_refund(username):
 
         # Update user's database entry with new values
         user.balance = currentBalance
-        user.moonlets = { 'inventory': newMoonlets }
-        user.transactions = { 'history': newHistory }
+        user.moonlets = jsonify({ 'inventory': newMoonlets })
+        user.transactions = jsonify({ 'history': newHistory })
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
@@ -445,9 +445,9 @@ def update_user_purchase(username):
 
         # Update user's database entry with new values
         user.balance = currentBalance
-        user.moonlets = { 'inventory': currentMoonlets }
-        user.transactions = { 'history': currentTransactions }
-        user.cart = { 'current': [] }
+        user.moonlets = jsonify({ 'inventory': currentMoonlets })
+        user.transactions = jsonify({ 'history': currentTransactions })
+        user.cart = jsonify({ 'current': [] })
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
