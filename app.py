@@ -306,9 +306,10 @@ def update_user_refund(username):
         # pull out fields to be modified
         temp = user.serialize()
         currentTransactions = temp['transactions']['history']
-        newHistory = [] # new history array to be updated to user store after refund item removed for history
         currentBalance = temp['balance']
-        currentMoonlets = temp['moonlets']
+        currentMoonlets = temp['moonlets']['inventory']
+        newHistory = [] # new history array to be updated to user store after refund item removed for history
+        newMoonlets = [] # new moonelts array to be updated to remove a moonlet if refund = 0
         refundAmount = 0
         refundTransaction = None
 
@@ -334,7 +335,13 @@ def update_user_refund(username):
             refundAmount += price * amount # amount of item * price of item
 
             ## remove current moonlet from user's moonlet inventory
-            currentMoonlets[item] -= amount
+            for x in xrange(len(currentMoonlets)):
+                if item in currentMoonlets[x]:
+                    if (currentMoonlets[x][item] - amount > 0):
+                        currentMoonlets[x][item] = currentMoonlets[x][item] - amount
+                        newMoonlets.append(currentMoonlets[x])
+                else:
+                    newMoonlets.append(currentMoonlets[x])
 
             ## Reflect new refund in moonlet inventory
             moonlet = Moonlet.query.filter_by(id = identity).first()
@@ -351,7 +358,7 @@ def update_user_refund(username):
 
         # Update user's database entry with new values
         user.balance = currentBalance
-        user.moonlets = currentMoonlets
+        user.moonlets = { 'inventory': currentMoonlets }
         user.transactions = { 'history': newHistory }
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
@@ -398,7 +405,7 @@ def update_user_purchase(username):
         temp = user.serialize()
         currentCart = temp['cart']['current']
         currentTransactions = temp['transactions']['history']
-        currentMoonlets = temp['moonlets']
+        currentMoonlets = temp['moonlets']['inventory']
         currentBalance = temp['balance']
         transactionCost = 0 # cost of this transaction
 
@@ -413,12 +420,15 @@ def update_user_purchase(username):
             amount = int(c['amount'])
             newTransaction['moonlets'].append(c)
             transactionCost += price * amount # amount of item * price of item
+            found = False
 
             ## add current moonlet to user's moonlet inventory
-            if item in currentMoonlets:
-                currentMoonlets[item] += amount
-            else:
-                currentMoonlets[item] = amount
+            for x in xrange(len(currentMoonlets)):
+                if item in currentMoonlets[x]:
+                    currentMoonlets[x][item] = currentMoonlets[x][item] + amount
+                    found = True
+                    break
+            if (found is False): currentMoonlets.append({ item: amount })
 
             ## Reflect new purchase in moonlet inventory
             moonlet = Moonlet.query.filter_by(id = identity).first()
@@ -435,12 +445,14 @@ def update_user_purchase(username):
 
         # Update user's database entry with new values
         user.balance = currentBalance
-        user.moonlets = currentMoonlets
+        user.moonlets = { 'inventory': currentMoonlets }
         user.transactions = { 'history': currentTransactions }
         user.cart = { 'current': [] }
 
-        #db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
+        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
+        moonlet.close()
+        user.close()
 
         return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
 
@@ -507,7 +519,7 @@ def create_user():
             platform = request.json.get('platform', ''),
             name = request.json.get('name', 'J. Doe'),
             balance = request.json.get('balance', 10000),
-            moonlets = {},
+            moonlets = { 'inventory': [] },
             transactions = { 'history': [] },
             cart = { 'current': [] }
         )
