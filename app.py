@@ -303,13 +303,17 @@ def update_user_refund(username):
         user = User.query.filter_by(username = username).first()
         if user is None: return make_error_response('User or Moonlet Not Found', 404) # returns None if unfound
 
-        # pull out fields to be modified
+        ## pull out fields to be modified
         temp = user.serialize()
         currentTransactions = temp['transactions']['history']
         currentBalance = temp['balance']
         currentMoonlets = temp['moonlets']['inventory']
+
+        ## new variables to represent clean state
         newHistory = [] # new history array to be updated to user store after refund item removed for history
         newMoonlets = [] # new moonelts array to be updated to remove a moonlet if refund = 0
+        newBalance = 0
+
         refundAmount = 0
         refundTransaction = None
 
@@ -352,14 +356,15 @@ def update_user_refund(username):
             moonlet.inventory = tempInventory
             db.session.merge(moonlet) ## merge changes to this moonlet
 
+        ## Finish transaction object and assign clean states
         newTransaction['price'] = refundAmount
-        currentBalance += refundAmount # update user's balance entry after refund
+        newBalance = currentBalance + refundAmount # update user's balance entry after refund
         newHistory.append(newTransaction) # update user's transaction entries
 
         # Update user's database entry with new values
         user.moonlets = { 'inventory': newMoonlets }
         user.transactions = { 'history': newHistory }
-        user.balance = currentBalance
+        user.balance = newBalance
 
         db.session.commit()
         user.close()
@@ -408,8 +413,11 @@ def update_user_purchase(username):
         currentMoonlets = temp['moonlets']['inventory']
         currentBalance = temp['balance']
 
+        ## new variables to represent clean state
         newTransactions = []
         newMoonlets = []
+        newBalance = 0
+
         transactionCost = 0 # cost of this transaction
 
         ## check if sent cart matches stored cart
@@ -433,7 +441,7 @@ def update_user_purchase(username):
                 newMoonlets.append(currentMoonlets[x])
             if (found is False): newMoonlets.append({ item: amount })
 
-            ## Reflect new purchase in moonlet inventory
+            ## Reflect new purchase in each moonlets inventory
             moonlet = Moonlet.query.filter_by(id = identity).first()
             if moonlet is None: return make_error_response('User or Moonlet Not Found', 404)
 
@@ -442,18 +450,18 @@ def update_user_purchase(username):
             moonlet.inventory = tempInventory
             db.session.merge(moonlet) ## merge changes to this moonlet
 
+        ## Finish new transaction and assign clean states
         ## transfer past transactions
         for x in xrange(len(currentTransactions)):
             newTransactions.append(currentTransactions[x])
-
         newTransaction['price'] = transactionCost
-        currentBalance -= transactionCost  # update user's balance entry after transaction
+        newBalance = currentBalance - transactionCost  # update user's balance entry after transaction
         newTransactions.append(newTransaction) # update user's transaction entries
 
-        # Update user's database entry with new values
+        ## Update user's database entry with new values
         user.moonlets = { 'inventory': newMoonlets }
         user.transactions = { 'history': newTransactions }
-        user.balance = currentBalance
+        user.balance = newBalance
         user.cart = { 'current': [] }
 
         db.session.commit()
