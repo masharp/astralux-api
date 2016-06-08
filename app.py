@@ -407,6 +407,9 @@ def update_user_purchase(username):
         currentTransactions = temp['transactions']['history']
         currentMoonlets = temp['moonlets']['inventory']
         currentBalance = temp['balance']
+
+        newTransactions = []
+        newMoonlets = []
         transactionCost = 0 # cost of this transaction
 
         ## check if sent cart matches stored cart
@@ -427,8 +430,8 @@ def update_user_purchase(username):
                 if item in currentMoonlets[x]:
                     currentMoonlets[x][item] = currentMoonlets[x][item] + amount
                     found = True
-                    break
-            if (found is False): currentMoonlets.append({ item: amount })
+                newMoonlets.append(currentMoonlets[x])
+            if (found is False): newMoonlets.append({ item: amount })
 
             ## Reflect new purchase in moonlet inventory
             moonlet = Moonlet.query.filter_by(id = identity).first()
@@ -439,15 +442,19 @@ def update_user_purchase(username):
             moonlet.inventory = tempInventory
             db.session.merge(moonlet) ## merge changes to this moonlet
 
+        ## transfer past transactions
+        for x in xrange(len(currentTransactions)):
+            newTransactions.append(currentTransactions[x])
+
         newTransaction['price'] = transactionCost
-        currentBalance -= transactionCost # update user's balance entry after transaction
-        currentTransactions.append(newTransaction) # update user's transaction entries
+        currentBalance -= transactionCost  # update user's balance entry after transaction
+        newTransactions.append(newTransaction) # update user's transaction entries
 
         # Update user's database entry with new values
-        user.moonlets = { 'inventory': currentMoonlets }
-        user.transactions = { 'history': currentTransactions }
-        user.cart = { 'current': [] }
+        user.moonlets = { 'inventory': newMoonlets }
+        user.transactions = { 'history': newTransactions }
         user.balance = currentBalance
+        user.cart = { 'current': [] }
 
         db.session.commit()
         moonlet.close()
