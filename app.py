@@ -396,7 +396,6 @@ def update_user_purchase(username):
 
         # pull out information to be modified
         temp = user.serialize()
-
         currentCart = temp['cart']['current']
         currentTransactions = temp['transactions']['history']
         currentMoonlets = temp['moonlets']
@@ -404,7 +403,7 @@ def update_user_purchase(username):
         transactionCost = 0 # cost of this transaction
 
         ## check if sent cart matches stored cart
-        if (currentCart != putCart or currentBalance != putBalance): return make_error_response('User Cart Invalid', 400)
+        if (currentBalance != putBalance): return make_error_response('User Cart Invalid', 400)
 
         # calculate cost of transaction and finish construction of transaction object
         for c in currentCart:
