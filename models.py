@@ -52,7 +52,7 @@ class Moonlet(db.Model):
         }
 
     ## class method to close the session used to query
-    def close():
+    def close(args):
         db.session.close()
 
 class User(db.Model):
