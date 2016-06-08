@@ -439,7 +439,7 @@ def update_user_purchase(username):
         user.transactions = { 'history': currentTransactions }
         user.cart = { 'current': [] }
 
-        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
+        #db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
 
         return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
