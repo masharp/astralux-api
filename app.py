@@ -369,7 +369,7 @@ def update_user_purchase(username):
 
         ## check if sent cart matches stored cart
         if (currentCart != putCart or currentBalance != putBalance): return make_error_response('User Cart Invalid', 400)
-
+        print 1
         # calculate cost of transaction and finish construction of transaction object
         for x in currentCart:
             item = int(x['item'])
@@ -393,6 +393,7 @@ def update_user_purchase(username):
             moonlet.inventory = tempInventory
             db.session.merge(moonlet) ## merge changes to this moonlet
 
+        print 2
         newTransaction['price'] = transactionCost
         currentBalance -= transactionCost # update user's balance entry after transaction
         currentTransactions.append(newTransaction) # update user's transaction entries
