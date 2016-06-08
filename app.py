@@ -291,6 +291,8 @@ def update_user_refund(username):
     now = str(datetime.utcnow())
     transactionID = int(request.json['transaction'])
 
+    print
+
     newTransaction = {
         'timestamp': now,
         'transaction': 'refund',
@@ -357,8 +359,8 @@ def update_user_refund(username):
         newHistory.append(newTransaction) # update user's transaction entries
 
         # Update user's database entry with new values
-        user.moonlets = jsonify({ 'inventory': newMoonlets })
-        user.transactions = jsonify({ 'history': newHistory })
+        user.moonlets = { 'inventory': newMoonlets }
+        user.transactions = { 'history': newHistory }
         user.balance = currentBalance
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
@@ -386,6 +388,7 @@ def update_user_purchase(username):
     putBalance = request.json['balance']
     putCost = request.json['cost']
 
+    print putCart, putBalance, putCost
     now = str(datetime.utcnow())
     transactionID = randint(1000, 9999) + randint(9999, 999999)
 
