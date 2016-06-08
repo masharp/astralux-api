@@ -441,8 +441,6 @@ def update_user_purchase(username):
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
-        user.close()
-        moonlet.close()
 
         return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
 
