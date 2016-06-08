@@ -333,10 +333,16 @@ def update_user_refund(username):
         print error
         abort(500)
 
-# Updates a user's purchases - refactor to just use the user's current cart
+# Updates a user's purchases - compares request transaction to user's stored cart
 @app.route('/api/users/purchase/<string:username>', methods=['PUT'])
 @auth.login_required
 def update_user_purchase(username):
+    if not request.json or not 'cart' in request.json or not 'balance' in request.json or not 'cost' in request.json:
+        abort(400)
+
+    putCart = request.json['cart']
+    putBalance = request.json['balance']
+    putCost = request.json['cost']
 
     now = str(datetime.utcnow())
     transactionID = randint(1000, 9999) + randint(9999, 999999)
@@ -359,11 +365,14 @@ def update_user_purchase(username):
         currentBalance = temp['balance']
         currentTransactions = temp['transactions']['history']
         currentMoonlets = temp['moonlets']
-        transactionCost = 0 # costof this transaction
+        transactionCost = 0 # cost of this transaction
+
+        ## check if sent cart matches stored cart
+        if (currentCart != putCart or currentBalance != putBalance): return make_error_response('User Cart Invalid', 400)
 
         # calculate cost of transaction and finish construction of transaction object
         for x in currentCart:
-            item = int(x['id'])
+            item = int(x['item'])
             price = int(x['price'])
             amount = int(x['amount'])
             newTransaction['moonlets'].append(x)
@@ -376,10 +385,12 @@ def update_user_purchase(username):
                 currentMoonlets[item] = amount
 
             ## Reflect new purchase in moonlet inventory
-            moonlet = Moonlet.query.filter_by(id = moonlet_id).first()
-            tempInv = moonlet.inventory
-            tempInv = tempInv - amount
-            moonlet.inventory = tempInv
+            moonlet = Moonlet.query.filter_by(id = item).first()
+            if moonlet is None: return make_error_response('User or Moonlet Not Found', 404)
+
+            tempInventory = moonlet.inventory
+            tempInventory = tempInventory - amount
+            moonlet.inventory = tempInventory
             db.session.merge(moonlet) ## merge changes to this moonlet
 
         newTransaction['price'] = transactionCost
@@ -395,7 +406,7 @@ def update_user_purchase(username):
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
 
-        return jsonify({ 'message': 'Purchase Made!', transaction: newTransaction }), 201
+        return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
 
     except Exception as error:
         print error
