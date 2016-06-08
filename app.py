@@ -395,12 +395,12 @@ def update_user_purchase(username):
 
         newTransaction['price'] = transactionCost
         currentBalance -= transactionCost # update user's balance entry after transaction
-        currentTransactions['history'].append(newTransaction) # update user's transaction entries
+        currentTransactions.append(newTransaction) # update user's transaction entries
 
         # Update user's database entry with new values
         user.balance = currentBalance
         user.moonlets = currentMoonlets
-        user.transactions = currentTransactions
+        user.transactions = { 'history': currentTransactions }
         user.cart = { 'cart': [] }
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
