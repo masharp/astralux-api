@@ -395,7 +395,7 @@ def update_user_purchase(username):
 
         newTransaction['price'] = transactionCost
         currentBalance -= transactionCost # update user's balance entry after transaction
-        currentTransactions.append(newTransaction) # update user's transaction entries
+        currentTransactions['history'].append(newTransaction) # update user's transaction entries
 
         # Update user's database entry with new values
         user.balance = currentBalance
