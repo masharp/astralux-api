@@ -244,7 +244,7 @@ def update_user_cart(username):
     if not request.json or not 'cart' in request.json:
         abort (400)
 
-    cart = { "cart": request.json['cart'] }
+    cart = { 'cart': request.json['cart'] }
 
     try:
         user = User.query.filter_by(username = username).first()
@@ -401,7 +401,7 @@ def update_user_purchase(username):
         user.balance = currentBalance
         user.moonlets = currentMoonlets
         user.transactions = currentTransactions
-        user.cart = { }
+        user.cart = { 'cart': [] }
 
         db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
@@ -468,7 +468,7 @@ def create_user():
             balance = request.json.get('balance', 10000),
             moonlets = { },
             transactions = { 'history': [] },
-            cart = { }
+            cart = { 'cart': [] }
         )
         db.session.add(user)
         db.session.commit()
