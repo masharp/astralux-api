@@ -213,7 +213,6 @@ def update_moonlet(moonlet_id):
 
             moonlet.on_sale = new_sale
 
-        db.session.merge(moonlet)
         db.session.commit()
         moonlet.close()
 
@@ -243,7 +242,6 @@ def update_user(username):
 
         user.email = newEmail
 
-        db.session.merge(user)
         db.session.commit()
         user.close()
 
@@ -269,7 +267,7 @@ def update_user_cart(username):
         if user is None: return make_error_response('User or Moonlet Not Found', 404)
 
         user.cart = { 'current': cart }
-        db.session.merge(user)
+
         db.session.commit()
         user.close()
 
@@ -363,7 +361,6 @@ def update_user_refund(username):
         user.transactions = { 'history': newHistory }
         user.balance = currentBalance
 
-        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
         user.close()
         moonlet.close()
@@ -452,7 +449,6 @@ def update_user_purchase(username):
         user.cart = { 'current': [] }
         user.balance = currentBalance
 
-        db.session.merge(user) ## added .merge() because it wasn't updating in .commit() without it
         db.session.commit()
         moonlet.close()
         user.close()
