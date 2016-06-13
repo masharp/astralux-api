@@ -538,10 +538,11 @@ def create_user():
             cart = { 'current': [] }
         )
 
+        ## serialize new user to return with confirmation
         userData = user.serialize();
 
-        #db.session.add(user)
-        #db.session.commit()
+        db.session.add(user)
+        db.session.commit()
         user.close()
 
         return jsonify({ 'messsage': 'New user saved to database!', 'user': userData }), 201
