@@ -544,7 +544,7 @@ def create_user():
         #db.session.commit()
         user.close()
 
-        return jsonify({ 'messsage': 'New user saved to database!', user: userData }), 201
+        return jsonify({ 'messsage': 'New user saved to database!', 'user': userData }), 201
 
     except Exception as error:
         print error
