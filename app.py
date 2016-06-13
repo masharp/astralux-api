@@ -537,11 +537,14 @@ def create_user():
             transactions = { 'history': [] },
             cart = { 'current': [] }
         )
-        db.session.add(user)
-        db.session.commit()
+
+        userData = user.serialize();
+
+        #db.session.add(user)
+        #db.session.commit()
         user.close()
 
-        return jsonify({ 'messsage': 'New user saved to database!'}), 201
+        return jsonify({ 'messsage': 'New user saved to database!', user: userData }), 201
 
     except Exception as error:
         print error
