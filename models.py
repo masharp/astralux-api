@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import JSON
 class Moonlet(db.Model):
     __tablename__ = 'moonlets'
 
-    id = db.Column(db.Integer, primary_key = True) # id key
+    id = db.Column(db.Integer, primary_key = True, unique = True) # id key
     display_name = db.Column(db.String(), unique = True) # name of moonlet
     description = db.Column(db.String()) # description of moonlet
     classification = db.Column(db.String()) # type of moonlet
@@ -59,7 +59,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     username = db.Column(db.String(), primary_key = True, unique = True) # user name
-    email = db.Column(db.String(), unique = True) # email of user
+    email = db.Column(db.String()) # email of user
     platform = db.Column(db.String()) # external OAuth platform (Facebook, etc.)
     display_name = db.Column(db.String()) # name of user
     balance = db.Column(db.Integer) # account coin balance
