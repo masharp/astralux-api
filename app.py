@@ -340,12 +340,12 @@ def update_user_refund(username):
             refundAmount += price * amount # amount of item * price of item
 
             ## remove current moonlet from user's moonlet inventory
-            for x in currentMoonlets:
-                if item in x:
-                    if (x[item] - amount) > 0:
-                        x[item] = x[item] - amount
-                    elif (x[item] - amount) == 0:
-                        currentMoonlets.remove(x)
+            for i in currentMoonlets:
+                if item in i:
+                    if int(i[item] - amount) > 0:
+                        i[item] -= amount
+                    elif int(i[item] - amount) == 0:
+                        currentMoonlets.remove(i)
 
             ## Reflect new refund in moonlet inventory
             moonlet = Moonlet.query.filter_by(id = identity).first()
@@ -365,8 +365,6 @@ def update_user_refund(username):
         user.balance = newBalance
 
         db.session.commit()
-        user.close()
-        moonlet.close()
 
         # return the transction created by the refund to be used by the view
         return jsonify({ 'message': 'Refund Made!', 'transaction': newTransaction }), 201
@@ -424,9 +422,10 @@ def update_user_purchase(username):
             ## add current moonlet to user's moonlet inventory
             for x in currentMoonlets:
                 if item in x:
-                    x[item] = x[item] + amount
+                    a = x[item] + amount
+                    currentMoonlets.remove(x)
+                    currentMoonlets.append({ item: a })
                     found = True
-                ## NOTE: CURRENTLY DUPLICATES FOR LENGTH OF CART, MOVE OUTSIDE
             if found == False: newMoonlets.append({ item: amount })
 
             ## Reflect new purchase in each moonlets inventory
@@ -437,8 +436,9 @@ def update_user_purchase(username):
 
         ## Finish new transaction and assign clean states
         ## transfer past transactions and new moonlets
-        for x in currentTransactions: newTransactions.append(x)
-        for y in currentMoonlets: newMoonlets.append(y)
+        for y in currentTransactions: newTransactions.append(y)
+        for z in currentMoonlets: newMoonlets.append(z)
+        print newMoonlets
         newTransaction['price'] = transactionCost
         newBalance = currentBalance - transactionCost  # update user's balance entry after transaction
         newTransactions.append(newTransaction) # update user's transaction entries
@@ -450,8 +450,6 @@ def update_user_purchase(username):
         user.cart = { 'current': [] }
 
         db.session.commit()
-        moonlet.close()
-        user.close()
 
         return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
 
