@@ -313,6 +313,7 @@ def update_user_refund(username):
         ## new variables to represent clean state
         newHistory = [] # new history array to be updated to user store after refund item removed for history
         newMoonlets = [] # new moonelts array to be updated to remove a moonlet if refund = 0
+        updatedMoonlets = [] # holds moonlets that have been altered via this refund
         newBalance = 0
 
         refundAmount = 0
@@ -342,10 +343,14 @@ def update_user_refund(username):
             ## remove current moonlet from user's moonlet inventory
             for i in currentMoonlets:
                 if item in i:
-                    if int(i[item] - amount) > 0:
-                        i[item] -= amount
-                    elif int(i[item] - amount) == 0:
-                        currentMoonlets.remove(i)
+
+                    ## capture new inventory amount if refund does not take to 0
+                    if (i[item] - amount) > 0:
+                        a = i[item] - amount
+                        updatedMoonlets.append({ item: a })
+
+                    ## remove from curent regardless
+                    currentMoonlets.remove(i)
 
             ## Reflect new refund in moonlet inventory
             moonlet = Moonlet.query.filter_by(id = identity).first()
@@ -353,8 +358,11 @@ def update_user_refund(username):
             tempInventory = tempInventory + amount
             moonlet.inventory = tempInventory
 
+        print currentMoonlets
+        print updatedMoonlets
         ## Finish transaction object and assign clean states
-        for z in currentMoonlets: newMoonlets.append(z)
+        newMoonlets = currentMoonlets + updatedMoonlets
+        print newMoonlets
         newTransaction['price'] = refundAmount
         newBalance = currentBalance + refundAmount # update user's balance entry after refund
         newHistory.append(newTransaction) # update user's transaction entries
@@ -405,11 +413,11 @@ def update_user_purchase(username):
         ## new variables to represent clean state
         newTransactions = []
         newMoonlets = []
-        updatedMoonlets = []
+        updatedMoonlets = [] # holds moonlets that have been altered via this purchase
         newBalance = 0
 
         transactionCost = 0 # cost of this transaction
-        print currentMoonlets
+
         # calculate cost of transaction and finish construction of transaction object
         for c in currentCart:
             item = str(c['item'])
@@ -440,9 +448,6 @@ def update_user_purchase(username):
         ## transfer past transactions and new moonlets
         for y in currentTransactions: newTransactions.append(y)
         newMoonlets = currentMoonlets + updatedMoonlets
-        print currentMoonlets
-        print updatedMoonlets
-        print newMoonlets
         newTransaction['price'] = transactionCost
         newBalance = currentBalance - transactionCost  # update user's balance entry after transaction
         newTransactions.append(newTransaction) # update user's transaction entries
