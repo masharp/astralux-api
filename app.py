@@ -449,6 +449,7 @@ def update_user_purchase(username):
         user.balance = newBalance
         user.cart = { 'current': [] }
 
+        db.session.merge(user)
         db.session.commit()
 
         return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
