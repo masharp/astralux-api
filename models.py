@@ -1,6 +1,11 @@
+## Model module that includes SQL Alchemy models for both the moonlets and
+## user tables.
+
+
 from app import db
 from sqlalchemy.dialects.postgresql import JSON
 
+## Model representing a single moonlet
 class Moonlet(db.Model):
     __tablename__ = 'moonlets'
 
@@ -55,6 +60,7 @@ class Moonlet(db.Model):
     def close(args):
         db.session.close()
 
+## Model representing a single user
 class User(db.Model):
     __tablename__ = 'users'
 

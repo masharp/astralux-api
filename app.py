@@ -1,8 +1,11 @@
+## Central Flask application script. Includes all routes for the REST API,
+## error handlers, and business logic. Authenticates route calls via simple HTTP
+## username:password auth. Imports SQLAlchemy ORM models in order to interact with
+## PostgreSQL datastore.
+##
+## TODO: Decompose business logic and import via functions
+
 #!flask/bin/python
-## http://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
-## https://realpython.com/blog/python/flask-by-example-part-2-postgres-sqlalchemy-and-alembic/
-## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X POST -d '{"name":"Astralux-FA199"}' http://localhost:5000/api/v1.0/moonlets
-## curl -u USERNAME:PASSWORD -H "Content-Type: application/json" -X PUT -d '{"timestamp": "05/21/16", "moonlet": 520200, "action":"purchase"}' http://localhost:5000/api/v1.0/users/admin
 
 import os, types, json
 from datetime import datetime
@@ -380,7 +383,7 @@ def update_user_purchase(username):
     from models import User, Moonlet
 
     now = str(datetime.utcnow())
-    transactionID = randint(1000, 9999) + randint(9999, 999999)
+    transactionID = randint(100000, 999999) + randint(999999, 99999999)
 
     newTransaction = {
         'timestamp': now,
@@ -473,7 +476,7 @@ def create_moonlet():
 
         newMoonlet = Moonlet( # create a new table item out of the posted json or defaults
             name = newName,
-            idNum = randint(100000, 999999),
+            idNum = randint(10000000, 99999999),
             desc = request.json.get('description', 'A newly discovered moonlet!'),
             classif = request.json.get('classification', 'AA-Zeus'),
             color = request.json.get('color', 'Grey'),
