@@ -358,11 +358,8 @@ def update_user_refund(username):
             tempInventory = tempInventory + amount
             moonlet.inventory = tempInventory
 
-        print currentMoonlets
-        print updatedMoonlets
         ## Finish transaction object and assign clean states
         newMoonlets = currentMoonlets + updatedMoonlets
-        print newMoonlets
         newTransaction['price'] = refundAmount
         newBalance = currentBalance + refundAmount # update user's balance entry after refund
         newHistory.append(newTransaction) # update user's transaction entries
