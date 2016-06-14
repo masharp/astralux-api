@@ -405,10 +405,11 @@ def update_user_purchase(username):
         ## new variables to represent clean state
         newTransactions = []
         newMoonlets = []
+        updatedMoonlets = []
         newBalance = 0
 
         transactionCost = 0 # cost of this transaction
-
+        print currentMoonlets
         # calculate cost of transaction and finish construction of transaction object
         for c in currentCart:
             item = str(c['item'])
@@ -423,10 +424,11 @@ def update_user_purchase(username):
             for x in currentMoonlets:
                 if item in x:
                     a = x[item] + amount
+                    updatedMoonlets.append({ item: a })
                     currentMoonlets.remove(x)
-                    currentMoonlets.append({ item: a })
                     found = True
-            if found == False: newMoonlets.append({ item: amount })
+                    break
+            if found == False: updatedMoonlets.append({ item: amount })
 
             ## Reflect new purchase in each moonlets inventory
             moonlet = Moonlet.query.filter_by(id = identity).first()
@@ -437,7 +439,9 @@ def update_user_purchase(username):
         ## Finish new transaction and assign clean states
         ## transfer past transactions and new moonlets
         for y in currentTransactions: newTransactions.append(y)
-        for z in currentMoonlets: newMoonlets.append(z)
+        newMoonlets = currentMoonlets + updatedMoonlets
+        print currentMoonlets
+        print updatedMoonlets
         print newMoonlets
         newTransaction['price'] = transactionCost
         newBalance = currentBalance - transactionCost  # update user's balance entry after transaction
@@ -449,7 +453,6 @@ def update_user_purchase(username):
         user.balance = newBalance
         user.cart = { 'current': [] }
 
-        db.session.merge(user)
         db.session.commit()
 
         return jsonify({ 'message': 'Purchase Made!', 'transaction': newTransaction }), 201
